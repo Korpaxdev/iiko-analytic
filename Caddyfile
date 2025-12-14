@@ -1,0 +1,65 @@
+# Локальная разработка
+:80 {
+    # Reverse proxy к API
+    reverse_proxy api:8080 {
+        # Health check
+        health_uri /
+        health_interval 10s
+        health_timeout 5s
+        
+        # Headers
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    # Логирование
+    log {
+        output file /var/log/caddy/access.log
+        format json
+    }
+
+    # Компрессия (если API не сжимает)
+    encode gzip zstd
+
+    # CORS (раскомментируйте если нужно)
+    # header {
+    #     Access-Control-Allow-Origin *
+    #     Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+    #     Access-Control-Allow-Headers "Content-Type, Authorization"
+    # }
+}
+
+# Для продакшена с доменом (раскомментируйте и замените домен)
+# your-domain.com {
+#     reverse_proxy api:8080 {
+#         health_uri /
+#         health_interval 10s
+#         health_timeout 5s
+#         
+#         header_up Host {host}
+#         header_up X-Real-IP {remote_host}
+#         header_up X-Forwarded-For {remote_host}
+#         header_up X-Forwarded-Proto {scheme}
+#     }
+#
+#     # Автоматический HTTPS от Let's Encrypt
+#     tls your-email@example.com
+#
+#     log {
+#         output file /var/log/caddy/access.log
+#         format json
+#     }
+#
+#     encode gzip zstd
+#
+#     # Rate limiting (опционально)
+#     # rate_limit {
+#     #     zone dynamic {
+#     #         key {remote_host}
+#     #         events 100
+#     #         window 1m
+#     #     }
+#     # }
+# }

@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OLAP Query Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+      };
+    </script>
+    <style>
+      /* Prevent layout shift when scrollbar appears */
+      html {
+        scrollbar-gutter: stable;
+      }
+
+      /* Custom scrollbar styles */
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 4px;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+
+      /* Dark theme scrollbar */
+      .dark .custom-scrollbar::-webkit-scrollbar-track {
+        background: #1e293b;
+      }
+
+      .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #475569;
+      }
+
+      .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
+      }
+
+      /* Firefox scrollbar */
+      .custom-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 #f1f5f9;
+      }
+
+      .dark .custom-scrollbar {
+        scrollbar-color: #475569 #1e293b;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-gray-100 dark:bg-gray-900 min-h-screen p-8 transition-colors duration-200"
+  >
+    <div class="max-w-7xl mx-auto">
+      <div class="flex justify-between items-center mb-8">
+        <h1 class="text-4xl font-bold text-gray-800 dark:text-gray-100">
+          OLAP Query Builder
+        </h1>
+        <button
+          onclick="toggleTheme()"
+          class="p-3 rounded-lg bg-white dark:bg-gray-800 shadow-md hover:shadow-lg transition-all duration-200"
+          title="Переключить тему"
+        >
+          <svg
+            id="themeIconLight"
+            class="w-6 h-6 text-gray-800 dark:hidden"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+            />
+          </svg>
+          <svg
+            id="themeIconDark"
+            class="w-6 h-6 text-gray-200 hidden dark:block"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <!-- Connection Settings -->
+        <div
+          class="lg:col-span-3 bg-white dark:bg-gray-800 rounded-lg shadow-md p-6"
+        >
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-semibold text-gray-700 dark:text-gray-200">
+              Настройки подключения
+            </h2>
+            <button
+              onclick="clearConnectionSettings()"
+              class="text-sm text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 underline"
+              title="Очистить сохраненные данные"
+            >
+              Очистить
+            </button>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                >Base URL <span class="text-red-500">*</span></label
+              >
+              <input
+                type="url"
+                id="baseURL"
+                required
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                placeholder="https://api.example.com"
+              />
+            </div>
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                >User <span class="text-red-500">*</span></label
+              >
+              <input
+                type="text"
+                id="user"
+                required
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                placeholder="username"
+              />
+            </div>
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                >Password Hash <span class="text-red-500">*</span></label
+              >
+              <input
+                type="password"
+                id="passwordHash"
+                required
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                placeholder="password hash"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Report Settings -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+          <h2
+            class="text-2xl font-semibold text-gray-700 dark:text-gray-200 mb-4"
+          >
+            Параметры отчёта
+          </h2>
+
+          <div class="mb-4">
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >Report Type</label
+            >
+            <select
+              id="reportType"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+            >
+              <option value="SALES">SALES</option>
+              <option value="TRANSACTIONS">TRANSACTIONS</option>
+            </select>
+          </div>
+
+          <div class="mb-4">
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >From Date <span class="text-red-500">*</span></label
+            >
+            <input
+              type="date"
+              id="fromDate"
+              required
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+            />
+          </div>
+
+          <div class="mb-4">
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >To Date <span class="text-red-500">*</span></label
+            >
+            <input
+              type="date"
+              id="toDate"
+              required
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+            />
+          </div>
+
+          <button
+            onclick="loadFields()"
+            class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md transition duration-200"
+          >
+            Загрузить доступные поля
+          </button>
+        </div>
+
+        <!-- Fields Selection -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+          <h2
+            class="text-2xl font-semibold text-gray-700 dark:text-gray-200 mb-4"
+          >
+            Выбор полей
+          </h2>
+
+          <div class="mb-4">
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >Group By Fields</label
+            >
+            <div
+              id="groupByFieldsContainer"
+              class="mb-2 flex flex-wrap gap-2 min-h-[2rem] p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700"
+            >
+              <!-- Tags will be added here -->
+            </div>
+            <div class="relative flex gap-2">
+              <div class="relative flex-1">
+                <input
+                  type="text"
+                  id="groupByFieldInput"
+                  placeholder="Введите название поля"
+                  autocomplete="off"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                />
+                <div
+                  id="groupByAutocomplete"
+                  class="custom-scrollbar hidden absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-y-auto"
+                ></div>
+              </div>
+              <button
+                onclick="addGroupByField()"
+                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition duration-200"
+              >
+                Добавить
+              </button>
+            </div>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Начните вводить для поиска или введите кастомное значение
+            </p>
+          </div>
+
+          <div class="mb-4">
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >Aggregate Fields</label
+            >
+            <div
+              id="aggregateFieldsContainer"
+              class="mb-2 flex flex-wrap gap-2 min-h-[2rem] p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700"
+            >
+              <!-- Tags will be added here -->
+            </div>
+            <div class="relative flex gap-2">
+              <div class="relative flex-1">
+                <input
+                  type="text"
+                  id="aggregateFieldInput"
+                  placeholder="Введите название поля"
+                  autocomplete="off"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                />
+                <div
+                  id="aggregateAutocomplete"
+                  class="custom-scrollbar hidden absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-y-auto"
+                ></div>
+              </div>
+              <button
+                onclick="addAggregateField()"
+                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition duration-200"
+              >
+                Добавить
+              </button>
+            </div>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Начните вводить для поиска или введите кастомное значение
+            </p>
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+          <h2
+            class="text-2xl font-semibold text-gray-700 dark:text-gray-200 mb-4"
+          >
+            Фильтры
+          </h2>
+
+          <div id="filtersList" class="space-y-3 mb-4">
+            <!-- Filters will be added here -->
+          </div>
+
+          <button
+            onclick="addFilter()"
+            class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md transition duration-200"
+          >
+            Добавить фильтр
+          </button>
+        </div>
+      </div>
+
+      <!-- Execute Button -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+        <button
+          onclick="executeQuery()"
+          class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-md transition duration-200 text-lg"
+        >
+          Выполнить запрос
+        </button>
+      </div>
+
+      <!-- Loading Indicator -->
+      <div
+        id="loading"
+        class="hidden bg-blue-100 dark:bg-blue-900 border border-blue-400 dark:border-blue-600 text-blue-700 dark:text-blue-200 px-4 py-3 rounded-md mb-6"
+      >
+        <p class="font-semibold">Загрузка...</p>
+      </div>
+
+      <!-- Error Display -->
+      <div
+        id="error"
+        class="hidden bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-200 px-4 py-3 rounded-md mb-6"
+      >
+        <p class="font-semibold">Ошибка:</p>
+        <p id="errorMessage"></p>
+      </div>
+
+      <!-- Results Table -->
+      <div
+        id="resultsContainer"
+        class="hidden bg-white dark:bg-gray-800 rounded-lg shadow-md p-6"
+      >
+        <h2
+          class="text-2xl font-semibold text-gray-700 dark:text-gray-200 mb-4"
+        >
+          Результаты
+        </h2>
+        <div class="overflow-x-auto">
+          <table
+            id="resultsTable"
+            class="min-w-full divide-y divide-gray-200 dark:divide-gray-700"
+          >
+            <thead class="bg-gray-50 dark:bg-gray-700">
+              <tr id="tableHeader"></tr>
+            </thead>
+            <tbody
+              id="tableBody"
+              class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
+            ></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let availableFields = {};
+      let filterCount = 0;
+      let selectedGroupByFields = [];
+      let selectedAggregateFields = [];
+      let editingField = null;
+      let autocompleteIndex = {
+        groupBy: -1,
+        aggregate: -1,
+      };
+      let filterAutocompleteIndex = {};
+
+      function toggleTheme() {
+        const html = document.documentElement;
+        const isDark = html.classList.contains("dark");
+
+        if (isDark) {
+          html.classList.remove("dark");
+          localStorage.setItem("theme", "light");
+        } else {
+          html.classList.add("dark");
+          localStorage.setItem("theme", "dark");
+        }
+      }
+
+      function initTheme() {
+        const savedTheme = localStorage.getItem("theme");
+        const prefersDark = window.matchMedia(
+          "(prefers-color-scheme: dark)"
+        ).matches;
+
+        if (savedTheme === "dark" || (!savedTheme && prefersDark)) {
+          document.documentElement.classList.add("dark");
+        }
+      }
+
+      initTheme();
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        document.getElementById("toDate").valueAsDate = today;
+        document.getElementById("fromDate").valueAsDate = yesterday;
+
+        document
+          .getElementById("groupByFieldInput")
+          .addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              addGroupByField();
+            }
+          });
+
+        document
+          .getElementById("groupByFieldInput")
+          .addEventListener("keydown", (e) => {
+            handleAutocompleteNavigation(e, "groupBy");
+          });
+
+        document
+          .getElementById("aggregateFieldInput")
+          .addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              addAggregateField();
+            }
+          });
+
+        document
+          .getElementById("aggregateFieldInput")
+          .addEventListener("keydown", (e) => {
+            handleAutocompleteNavigation(e, "aggregate");
+          });
+
+        document
+          .getElementById("groupByFieldInput")
+          .addEventListener("input", (e) => {
+            handleAutocomplete(e.target.value, "groupBy");
+          });
+
+        document
+          .getElementById("aggregateFieldInput")
+          .addEventListener("input", (e) => {
+            handleAutocomplete(e.target.value, "aggregate");
+          });
+
+        document.addEventListener("click", (e) => {
+          if (
+            !e.target.closest("#groupByFieldInput") &&
+            !e.target.closest("#groupByAutocomplete")
+          ) {
+            document
+              .getElementById("groupByAutocomplete")
+              .classList.add("hidden");
+            autocompleteIndex.groupBy = -1;
+          }
+          if (
+            !e.target.closest("#aggregateFieldInput") &&
+            !e.target.closest("#aggregateAutocomplete")
+          ) {
+            document
+              .getElementById("aggregateAutocomplete")
+              .classList.add("hidden");
+            autocompleteIndex.aggregate = -1;
+          }
+        });
+
+        document.getElementById("reportType").addEventListener("change", () => {
+          saveConnectionSettings();
+          const baseURL = document.getElementById("baseURL").value;
+          const user = document.getElementById("user").value;
+          const passwordHash = document.getElementById("passwordHash").value;
+
+          if (baseURL && user && passwordHash) {
+            loadFields();
+          }
+        });
+
+        document
+          .getElementById("baseURL")
+          .addEventListener("input", saveConnectionSettings);
+        document
+          .getElementById("user")
+          .addEventListener("input", saveConnectionSettings);
+        document
+          .getElementById("passwordHash")
+          .addEventListener("input", saveConnectionSettings);
+
+        loadConnectionSettings();
+      });
+
+      async function loadFields() {
+        const baseURL = document.getElementById("baseURL").value;
+        const user = document.getElementById("user").value;
+        const passwordHash = document.getElementById("passwordHash").value;
+        const reportType = document.getElementById("reportType").value;
+
+        if (!baseURL || !user || !passwordHash) {
+          showError("Заполните все поля подключения");
+          return;
+        }
+
+        showLoading(true);
+        hideError();
+
+        try {
+          const response = await fetch("/fields", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ baseURL, user, passwordHash, reportType }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.error || "Failed to load fields");
+          }
+
+          availableFields = data;
+          showLoading(false);
+        } catch (error) {
+          showError(error.message);
+          showLoading(false);
+        }
+      }
+
+      function saveConnectionSettings() {
+        const settings = {
+          baseURL: document.getElementById("baseURL").value,
+          user: document.getElementById("user").value,
+          passwordHash: document.getElementById("passwordHash").value,
+          reportType: document.getElementById("reportType").value,
+        };
+        localStorage.setItem(
+          "olapConnectionSettings",
+          JSON.stringify(settings)
+        );
+      }
+
+      function loadConnectionSettings() {
+        const saved = localStorage.getItem("olapConnectionSettings");
+        if (saved) {
+          try {
+            const settings = JSON.parse(saved);
+            document.getElementById("baseURL").value = settings.baseURL || "";
+            document.getElementById("user").value = settings.user || "";
+            document.getElementById("passwordHash").value =
+              settings.passwordHash || "";
+            document.getElementById("reportType").value =
+              settings.reportType || "SALES";
+          } catch (e) {}
+        }
+      }
+
+      function clearConnectionSettings() {
+        if (
+          confirm(
+            "Вы уверены что хотите очистить сохраненные данные подключения?"
+          )
+        ) {
+          localStorage.removeItem("olapConnectionSettings");
+          document.getElementById("baseURL").value = "";
+          document.getElementById("user").value = "";
+          document.getElementById("passwordHash").value = "";
+          document.getElementById("reportType").value = "SALES";
+          availableFields = {};
+          selectedGroupByFields = [];
+          selectedAggregateFields = [];
+          renderGroupByFields();
+          renderAggregateFields();
+        }
+      }
+
+      function addGroupByField() {
+        const input = document.getElementById("groupByFieldInput");
+        const value = input.value.trim();
+
+        if (editingField) {
+          const index = selectedGroupByFields.indexOf(editingField);
+          if (index !== -1 && value) {
+            selectedGroupByFields[index] = value;
+          }
+          editingField = null;
+        } else if (value && !selectedGroupByFields.includes(value)) {
+          selectedGroupByFields.push(value);
+        }
+
+        renderGroupByFields();
+        input.value = "";
+        document.getElementById("groupByAutocomplete").classList.add("hidden");
+        autocompleteIndex.groupBy = -1;
+      }
+
+      function removeGroupByField(field) {
+        selectedGroupByFields = selectedGroupByFields.filter(
+          (f) => f !== field
+        );
+        renderGroupByFields();
+      }
+
+      function editGroupByField(field) {
+        editingField = field;
+        document.getElementById("groupByFieldInput").value = field;
+        document.getElementById("groupByFieldInput").focus();
+      }
+
+      function renderGroupByFields() {
+        const container = document.getElementById("groupByFieldsContainer");
+        container.innerHTML = "";
+
+        selectedGroupByFields.forEach((field) => {
+          const tag = document.createElement("span");
+          tag.className =
+            "inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm cursor-pointer hover:bg-blue-200";
+
+          const fieldName = availableFields[field]?.name || field;
+          const displayText = availableFields[field]
+            ? `${fieldName} (${field})`
+            : field;
+
+          tag.innerHTML = `
+            <span onclick="editGroupByField('${field.replace(/'/g, "\\'")}')">
+              ${displayText}
+            </span>
+            <button onclick="event.stopPropagation(); removeGroupByField('${field.replace(
+              /'/g,
+              "\\'"
+            )}');" class="hover:text-blue-600">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          `;
+          container.appendChild(tag);
+        });
+      }
+
+      function addAggregateField() {
+        const input = document.getElementById("aggregateFieldInput");
+        const value = input.value.trim();
+
+        if (editingField) {
+          const index = selectedAggregateFields.indexOf(editingField);
+          if (index !== -1 && value) {
+            selectedAggregateFields[index] = value;
+          }
+          editingField = null;
+        } else if (value && !selectedAggregateFields.includes(value)) {
+          selectedAggregateFields.push(value);
+        }
+
+        renderAggregateFields();
+        input.value = "";
+        document
+          .getElementById("aggregateAutocomplete")
+          .classList.add("hidden");
+        autocompleteIndex.aggregate = -1;
+      }
+
+      function removeAggregateField(field) {
+        selectedAggregateFields = selectedAggregateFields.filter(
+          (f) => f !== field
+        );
+        renderAggregateFields();
+      }
+
+      function editAggregateField(field) {
+        editingField = field;
+        document.getElementById("aggregateFieldInput").value = field;
+        document.getElementById("aggregateFieldInput").focus();
+      }
+
+      function renderAggregateFields() {
+        const container = document.getElementById("aggregateFieldsContainer");
+        container.innerHTML = "";
+
+        selectedAggregateFields.forEach((field) => {
+          const tag = document.createElement("span");
+          tag.className =
+            "inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm cursor-pointer hover:bg-green-200";
+
+          const fieldName = availableFields[field]?.name || field;
+          const displayText = availableFields[field]
+            ? `${fieldName} (${field})`
+            : field;
+
+          tag.innerHTML = `
+            <span onclick="editAggregateField('${field.replace(/'/g, "\\'")}')">
+              ${displayText}
+            </span>
+            <button onclick="event.stopPropagation(); removeAggregateField('${field.replace(
+              /'/g,
+              "\\'"
+            )}');" class="hover:text-green-600">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          `;
+          container.appendChild(tag);
+        });
+      }
+
+      function handleAutocompleteNavigation(e, type) {
+        const autocompleteId =
+          type === "groupBy" ? "groupByAutocomplete" : "aggregateAutocomplete";
+        const autocomplete = document.getElementById(autocompleteId);
+        const items = autocomplete.querySelectorAll("div.autocomplete-item");
+
+        if (items.length === 0) return;
+
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          autocompleteIndex[type] = Math.min(
+            autocompleteIndex[type] + 1,
+            items.length - 1
+          );
+          updateAutocompleteHighlight(items, autocompleteIndex[type]);
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          autocompleteIndex[type] = Math.max(autocompleteIndex[type] - 1, 0);
+          updateAutocompleteHighlight(items, autocompleteIndex[type]);
+        } else if (e.key === "Enter" && autocompleteIndex[type] >= 0) {
+          e.preventDefault();
+          items[autocompleteIndex[type]].click();
+        } else if (e.key === "Escape") {
+          autocomplete.classList.add("hidden");
+          autocompleteIndex[type] = -1;
+        }
+      }
+
+      function updateAutocompleteHighlight(items, index) {
+        items.forEach((item, i) => {
+          if (i === index) {
+            item.classList.add("bg-gray-200", "dark:bg-gray-600");
+            item.scrollIntoView({ block: "nearest" });
+          } else {
+            item.classList.remove("bg-gray-200", "dark:bg-gray-600");
+          }
+        });
+      }
+
+      function normalizeSearchString(str) {
+        // Убираем все разделители (точки, подчеркивания, дефисы, пробелы) и приводим к нижнему регистру
+        return str.toLowerCase().replace(/[.\-_\s]/g, "");
+      }
+
+      function handleAutocomplete(searchText, type) {
+        const autocompleteId =
+          type === "groupBy" ? "groupByAutocomplete" : "aggregateAutocomplete";
+        const autocomplete = document.getElementById(autocompleteId);
+        const selectedFields =
+          type === "groupBy" ? selectedGroupByFields : selectedAggregateFields;
+
+        autocompleteIndex[type] = -1;
+
+        if (!searchText || searchText.length < 1) {
+          autocomplete.classList.add("hidden");
+          return;
+        }
+
+        if (!availableFields || Object.keys(availableFields).length === 0) {
+          autocomplete.classList.add("hidden");
+          return;
+        }
+
+        const searchNormalized = normalizeSearchString(searchText);
+        const filtered = Object.entries(availableFields).filter(
+          ([key, field]) => {
+            const allowed =
+              type === "groupBy"
+                ? field.groupingAllowed
+                : field.aggregationAllowed;
+
+            // Нормализуем ключ и имя поля для сравнения
+            const keyNormalized = normalizeSearchString(key);
+            const nameNormalized = normalizeSearchString(field.name);
+
+            const matchesSearch =
+              keyNormalized.includes(searchNormalized) ||
+              nameNormalized.includes(searchNormalized);
+            const notSelected = !selectedFields.includes(key);
+            return allowed && matchesSearch && notSelected;
+          }
+        );
+
+        if (filtered.length === 0) {
+          autocomplete.classList.add("hidden");
+          return;
+        }
+
+        autocomplete.innerHTML = "";
+        autocomplete.classList.remove("hidden");
+
+        filtered.slice(0, 10).forEach(([key, field]) => {
+          const item = document.createElement("div");
+          item.className =
+            "autocomplete-item px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm";
+          item.innerHTML = `
+            <div class="font-medium text-gray-900 dark:text-gray-100">${field.name}</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400">${key}</div>
+          `;
+          item.onclick = () => {
+            if (type === "groupBy") {
+              document.getElementById("groupByFieldInput").value = key;
+              addGroupByField();
+            } else {
+              document.getElementById("aggregateFieldInput").value = key;
+              addAggregateField();
+            }
+          };
+          autocomplete.appendChild(item);
+        });
+      }
+
+      function addFilter() {
+        const filtersList = document.getElementById("filtersList");
+        const filterId = filterCount++;
+
+        const filterDiv = document.createElement("div");
+        filterDiv.className =
+          "border border-gray-300 dark:border-gray-600 rounded-md p-3 bg-gray-50 dark:bg-gray-700";
+        filterDiv.id = "filter-" + filterId;
+        filterDiv.innerHTML = `
+                <div class="mb-2">
+                    <div class="relative mb-2">
+                        <input type="text" placeholder="Field name" id="filter-field-${filterId}" class="filter-field w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" autocomplete="off">
+                        <div id="filter-autocomplete-${filterId}" class="custom-scrollbar hidden absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-y-auto"></div>
+                    </div>
+                    <select class="filter-type w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm mb-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
+                        <option value="IncludeValues">Include Values</option>
+                        <option value="ExcludeValues">Exclude Values</option>
+                    </select>
+                    <input type="text" placeholder="Values (comma separated)" class="filter-values w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm mb-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
+                    <button onclick="removeFilter(${filterId})" class="w-full bg-red-500 hover:bg-red-600 text-white text-sm py-1 px-2 rounded">
+                        Удалить
+                    </button>
+                </div>
+            `;
+
+        filtersList.appendChild(filterDiv);
+
+        // Добавляем обработчики для автокомплита
+        const filterInput = document.getElementById(`filter-field-${filterId}`);
+        const filterAutocomplete = document.getElementById(
+          `filter-autocomplete-${filterId}`
+        );
+
+        filterInput.addEventListener("input", (e) => {
+          handleFilterAutocomplete(e.target.value, filterId);
+        });
+
+        filterInput.addEventListener("keydown", (e) => {
+          handleFilterAutocompleteNavigation(e, filterId);
+        });
+
+        // Закрытие автокомплита при клике вне его
+        document.addEventListener("click", (e) => {
+          if (
+            !e.target.closest(`#filter-field-${filterId}`) &&
+            !e.target.closest(`#filter-autocomplete-${filterId}`)
+          ) {
+            filterAutocomplete.classList.add("hidden");
+          }
+        });
+      }
+
+      function removeFilter(filterId) {
+        const filterDiv = document.getElementById("filter-" + filterId);
+        if (filterDiv) {
+          filterDiv.remove();
+          delete filterAutocompleteIndex[filterId];
+        }
+      }
+
+      function handleFilterAutocomplete(searchText, filterId) {
+        const autocomplete = document.getElementById(
+          `filter-autocomplete-${filterId}`
+        );
+
+        filterAutocompleteIndex[filterId] = -1;
+
+        if (!searchText || searchText.length < 1) {
+          autocomplete.classList.add("hidden");
+          return;
+        }
+
+        if (!availableFields || Object.keys(availableFields).length === 0) {
+          autocomplete.classList.add("hidden");
+          return;
+        }
+
+        const searchNormalized = normalizeSearchString(searchText);
+        const filtered = Object.entries(availableFields).filter(
+          ([key, field]) => {
+            const keyNormalized = normalizeSearchString(key);
+            const nameNormalized = normalizeSearchString(field.name);
+
+            return (
+              keyNormalized.includes(searchNormalized) ||
+              nameNormalized.includes(searchNormalized)
+            );
+          }
+        );
+
+        if (filtered.length === 0) {
+          autocomplete.classList.add("hidden");
+          return;
+        }
+
+        autocomplete.innerHTML = "";
+        autocomplete.classList.remove("hidden");
+
+        filtered.slice(0, 10).forEach(([key, field]) => {
+          const item = document.createElement("div");
+          item.className =
+            "autocomplete-item px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm";
+          item.innerHTML = `
+            <div class="font-medium text-gray-900 dark:text-gray-100">${field.name}</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400">${key}</div>
+          `;
+          item.onclick = () => {
+            document.getElementById(`filter-field-${filterId}`).value = key;
+            autocomplete.classList.add("hidden");
+            filterAutocompleteIndex[filterId] = -1;
+          };
+          autocomplete.appendChild(item);
+        });
+      }
+
+      function handleFilterAutocompleteNavigation(e, filterId) {
+        const autocomplete = document.getElementById(
+          `filter-autocomplete-${filterId}`
+        );
+        const items = autocomplete.querySelectorAll("div.autocomplete-item");
+
+        if (items.length === 0) return;
+
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          filterAutocompleteIndex[filterId] = Math.min(
+            (filterAutocompleteIndex[filterId] || -1) + 1,
+            items.length - 1
+          );
+          updateAutocompleteHighlight(items, filterAutocompleteIndex[filterId]);
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          filterAutocompleteIndex[filterId] = Math.max(
+            (filterAutocompleteIndex[filterId] || 0) - 1,
+            0
+          );
+          updateAutocompleteHighlight(items, filterAutocompleteIndex[filterId]);
+        } else if (
+          e.key === "Enter" &&
+          filterAutocompleteIndex[filterId] >= 0
+        ) {
+          e.preventDefault();
+          items[filterAutocompleteIndex[filterId]].click();
+        } else if (e.key === "Escape") {
+          autocomplete.classList.add("hidden");
+          filterAutocompleteIndex[filterId] = -1;
+        }
+      }
+
+      function getFilters() {
+        const filters = {};
+        const filterDivs = document.querySelectorAll("#filtersList > div");
+
+        filterDivs.forEach((div) => {
+          const field = div.querySelector(".filter-field").value.trim();
+          const type = div.querySelector(".filter-type").value;
+          const values = div
+            .querySelector(".filter-values")
+            .value.split(",")
+            .map((v) => v.trim())
+            .filter((v) => v);
+
+          if (field && values.length > 0) {
+            filters[field] = {
+              filterType: type,
+              values: values,
+            };
+          }
+        });
+
+        return filters;
+      }
+
+      async function executeQuery() {
+        const baseURL = document.getElementById("baseURL").value;
+        const user = document.getElementById("user").value;
+        const passwordHash = document.getElementById("passwordHash").value;
+        const reportType = document.getElementById("reportType").value;
+        const from = document.getElementById("fromDate").value;
+        const to = document.getElementById("toDate").value;
+        const groupByRowFields = selectedGroupByFields;
+        const aggregateFields = selectedAggregateFields;
+        const filters = getFilters();
+
+        if (!baseURL || !user || !passwordHash || !from || !to) {
+          showError("Заполните все обязательные поля");
+          return;
+        }
+
+        showLoading(true);
+        hideError();
+        hideResults();
+
+        try {
+          const response = await fetch("/olap", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              baseURL,
+              user,
+              passwordHash,
+              reportType,
+              from,
+              to,
+              groupByRowFields,
+              aggregateFields,
+              filters,
+            }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(JSON.stringify(data, null, 2));
+          }
+
+          displayResults(data);
+          showLoading(false);
+        } catch (error) {
+          showError(error.message);
+          showLoading(false);
+        }
+      }
+
+      function displayResults(data) {
+        if (!data || data.length === 0) {
+          showError("Нет данных для отображения");
+          return;
+        }
+
+        const tableHeader = document.getElementById("tableHeader");
+        const tableBody = document.getElementById("tableBody");
+
+        tableHeader.innerHTML = "";
+        tableBody.innerHTML = "";
+
+        const firstRow = data[0];
+        Object.keys(firstRow).forEach((key) => {
+          const th = document.createElement("th");
+          th.className =
+            "px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider";
+          th.textContent = key;
+          tableHeader.appendChild(th);
+        });
+
+        data.forEach((row, index) => {
+          const tr = document.createElement("tr");
+          tr.className =
+            index % 2 === 0
+              ? "bg-white dark:bg-gray-800"
+              : "bg-gray-50 dark:bg-gray-700";
+
+          Object.values(row).forEach((value) => {
+            const td = document.createElement("td");
+            td.className =
+              "px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100";
+            td.textContent = value !== null && value !== undefined ? value : "";
+            tr.appendChild(td);
+          });
+
+          tableBody.appendChild(tr);
+        });
+
+        document.getElementById("resultsContainer").classList.remove("hidden");
+      }
+
+      function showLoading(show) {
+        document.getElementById("loading").classList.toggle("hidden", !show);
+      }
+
+      function hideError() {
+        document.getElementById("error").classList.add("hidden");
+      }
+
+      function showError(message) {
+        document.getElementById("errorMessage").textContent = message;
+        document.getElementById("error").classList.remove("hidden");
+      }
+
+      function hideResults() {
+        document.getElementById("resultsContainer").classList.add("hidden");
+      }
+    </script>
+  </body>
+</html>

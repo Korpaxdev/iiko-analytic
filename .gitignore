@@ -1,0 +1,73 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Go workspace file
+go.work
+go.work.sum
+
+# Dependency directories
+vendor/
+
+# Build output
+/bin/
+/dist/
+/build/
+tmp/
+*.log
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Air (hot reload) temporary files
+tmp/
+.air.toml
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Compiled binary
+/main
+/api
+/iiko-analytic
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Cache
+*.cache
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
