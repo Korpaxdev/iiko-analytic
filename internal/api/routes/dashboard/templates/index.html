@@ -212,6 +212,7 @@
           </div>
 
           <button
+            id="loadFieldsButton"
             onclick="loadFields()"
             class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md transition duration-200"
           >
@@ -378,7 +379,10 @@
     </div>
 
     <script>
-      let availableFields = {};
+      let availableFieldsByReportType = {
+        SALES: null,
+        TRANSACTIONS: null,
+      };
       let filterCount = 0;
       let selectedGroupByFields = [];
       let selectedAggregateFields = [];
@@ -388,6 +392,23 @@
         aggregate: -1,
       };
       let filterAutocompleteIndex = {};
+
+      function getCurrentFields() {
+        const reportType = document.getElementById("reportType").value;
+        return availableFieldsByReportType[reportType] || {};
+      }
+
+      function updateLoadFieldsButtonVisibility() {
+        const reportType = document.getElementById("reportType").value;
+        const button = document.getElementById("loadFieldsButton");
+        const fieldsLoaded = availableFieldsByReportType[reportType] !== null;
+
+        if (fieldsLoaded) {
+          button.classList.add("hidden");
+        } else {
+          button.classList.remove("hidden");
+        }
+      }
 
       function toggleTheme() {
         const html = document.documentElement;
@@ -488,12 +509,17 @@
 
         document.getElementById("reportType").addEventListener("change", () => {
           saveConnectionSettings();
+          updateLoadFieldsButtonVisibility();
+
           const baseURL = document.getElementById("baseURL").value;
           const user = document.getElementById("user").value;
           const passwordHash = document.getElementById("passwordHash").value;
 
           if (baseURL && user && passwordHash) {
-            loadFields();
+            const reportType = document.getElementById("reportType").value;
+            if (availableFieldsByReportType[reportType] === null) {
+              loadFields();
+            }
           }
         });
 
@@ -508,6 +534,7 @@
           .addEventListener("input", saveConnectionSettings);
 
         loadConnectionSettings();
+        updateLoadFieldsButtonVisibility();
       });
 
       async function loadFields() {
@@ -537,7 +564,8 @@
             throw new Error(data.error || "Failed to load fields");
           }
 
-          availableFields = data;
+          availableFieldsByReportType[reportType] = data;
+          updateLoadFieldsButtonVisibility();
           showLoading(false);
         } catch (error) {
           showError(error.message);
@@ -584,11 +612,15 @@
           document.getElementById("user").value = "";
           document.getElementById("passwordHash").value = "";
           document.getElementById("reportType").value = "SALES";
-          availableFields = {};
+          availableFieldsByReportType = {
+            SALES: null,
+            TRANSACTIONS: null,
+          };
           selectedGroupByFields = [];
           selectedAggregateFields = [];
           renderGroupByFields();
           renderAggregateFields();
+          updateLoadFieldsButtonVisibility();
         }
       }
 
@@ -628,6 +660,7 @@
       function renderGroupByFields() {
         const container = document.getElementById("groupByFieldsContainer");
         container.innerHTML = "";
+        const availableFields = getCurrentFields();
 
         selectedGroupByFields.forEach((field) => {
           const tag = document.createElement("span");
@@ -694,6 +727,7 @@
       function renderAggregateFields() {
         const container = document.getElementById("aggregateFieldsContainer");
         container.innerHTML = "";
+        const availableFields = getCurrentFields();
 
         selectedAggregateFields.forEach((field) => {
           const tag = document.createElement("span");
@@ -772,6 +806,7 @@
         const autocomplete = document.getElementById(autocompleteId);
         const selectedFields =
           type === "groupBy" ? selectedGroupByFields : selectedAggregateFields;
+        const availableFields = getCurrentFields();
 
         autocompleteIndex[type] = -1;
 
@@ -898,6 +933,7 @@
         const autocomplete = document.getElementById(
           `filter-autocomplete-${filterId}`
         );
+        const availableFields = getCurrentFields();
 
         filterAutocompleteIndex[filterId] = -1;
 
