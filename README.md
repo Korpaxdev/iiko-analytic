@@ -80,10 +80,11 @@ air -c api.air.toml
 
 **Особенности:**
 
-- Модульная структура JavaScript (6 отдельных модулей)
+- Модульная структура JavaScript (7 отдельных модулей)
 - ETag кэширование для всех статических ресурсов
 - Cache-Control: 1 год для JS, 1 час для HTML
 - HTTP/2 Server Push для CDN
+- Плавающая кнопка scroll-to-top при прокрутке
 
 ### `GET /static/js/*`
 
@@ -95,6 +96,7 @@ air -c api.air.toml
 - `utils.js` - утилиты (тема, localStorage, debounce)
 - `fields.js` - работа с полями (Group By, Aggregate)
 - `filters.js` - работа с фильтрами
+- `clear-fields.js` - очистка всех полей и фильтров OLAP отчета
 - `query.js` - выполнение и конструирование запросов
 - `json-highlight.js` - подсветка синтаксиса JSON
 
