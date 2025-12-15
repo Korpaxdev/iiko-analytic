@@ -14,8 +14,10 @@ REST API для работы с аналитикой iiko через OLAP-отч
 
 - Получение OLAP-отчетов из iiko
 - Получение списка доступных полей для отчетов
+- Загрузка сохраненных пресетов отчетов из iiko
 - Конструирование JSON запросов для iiko API
-- Веб-интерфейс с автоматической загрузкой полей и подсветкой JSON
+- Веб-интерфейс с автоматической загрузкой полей и пресетов
+- Поддержка группировки по строкам (groupByRowFields) и столбцам (groupByColFields)
 - Автоматическое кэширование запросов к iiko
 - Компрессия ответов (gzip/brotli)
 - HTTP/2 ready
@@ -66,6 +68,9 @@ air -c api.air.toml
 **Возможности:**
 
 - Автоматическая загрузка доступных полей при заполнении данных подключения (с debounce)
+- Автоматическая загрузка сохраненных пресетов из iiko
+- Выбор пресета для автозаполнения всех полей отчета
+- Раздельная группировка по строкам (Row) и столбцам (Col)
 - Автокомплит для полей группировки, агрегации и фильтров
 - Две кнопки действий:
   - **Выполнить запрос** - получение и отображение данных в таблице
@@ -172,6 +177,7 @@ air -c api.air.toml
 - `passwordHash` (string, required) - хэш пароля
 - `reportType` (string, required) - тип отчета: `SALES` или `TRANSACTIONS`
 - `groupByRowFields` ([]string, optional) - поля для группировки по строкам
+- `groupByColFields` ([]string, optional) - поля для группировки по столбцам
 - `aggregateFields` ([]string, optional) - поля для агрегации
 - `filters` (map[string]Filter, optional) - фильтры по полям
   - `filterType` (string) - тип фильтра: `IncludeValues` или `ExcludeValues`
@@ -275,6 +281,73 @@ air -c api.air.toml
 
 Аналогичны endpoint `/olap`.
 
+---
+
+### `POST /olap-presets`
+
+Получение списка сохраненных пресетов OLAP-отчетов из iiko.
+
+**Request Body:**
+
+```json
+{
+  "baseURL": "https://your-iiko-instance.com",
+  "user": "your-username",
+  "passwordHash": "your-password-hash"
+}
+```
+
+**Параметры:**
+
+- `baseURL` (string, required) - URL вашего iiko сервера
+- `user` (string, required) - имя пользователя
+- `passwordHash` (string, required) - хэш пароля
+
+**Response:**
+
+```json
+[
+  {
+    "id": "08429b71-6836-50d5-018a-ad5308c5002c",
+    "name": "Доставки по рекламе",
+    "reportType": "DELIVERIES",
+    "groupByRowFields": ["Department", "MarketingSource"],
+    "groupByColFields": ["Delivery.IsDelivery"],
+    "aggregateFields": ["UniqOrderId.OrdersCount", "DishDiscountSumInt"],
+    "filters": {
+      "DeletedWithWriteoff": {
+        "filterType": "IncludeValues",
+        "values": ["NOT_DELETED"]
+      },
+      "Delivery.IsDelivery": {
+        "filterType": "IncludeValues",
+        "values": ["DELIVERY_ORDER"]
+      }
+    },
+    "buildSummary": null
+  }
+]
+```
+
+**Использование:**
+
+Этот endpoint полезен для:
+
+- Загрузки сохраненных конфигураций отчетов
+- Автоматического заполнения полей в веб-интерфейсе
+- Быстрого доступа к часто используемым отчетам
+- Синхронизации пресетов между системами
+
+**Особенности веб-интерфейса:**
+
+- Пресеты загружаются автоматически при заполнении credentials
+- Select с пресетами фильтруется по выбранному `reportType`
+- При выборе пресета автоматически заполняются все поля (groupByRowFields, groupByColFields, aggregateFields, filters)
+
+**Ошибки:**
+
+Аналогичны endpoint `/olap`.
+
 ## Архитектура
 
 ```
@@ -289,7 +362,8 @@ air -c api.air.toml
 │   │   │   │   └── templates/  # HTML шаблоны
 │   │   │   ├── fields/
 │   │   │   ├── olap/
-│   │   │   └── olap_body/
+│   │   │   ├── olap_body/
+│   │   │   └── olap_presets/
 │   │   └── utils/        # Утилиты (validator, handler)
 │   ├── cache/            # Кэширование с сжатием
 │   └── iiko/             # Интеграция с iiko API
@@ -412,6 +486,39 @@ curl -X POST http://localhost:8080/olap-body \
 }
 ```
 
+### Получение сохраненных пресетов
+
+```bash
+curl -X POST http://localhost:8080/olap-presets \
+  -H "Content-Type: application/json" \
+  -d '{
+    "baseURL": "https://demo.iiko.ru",
+    "user": "user",
+    "passwordHash": "hash"
+  }'
+```
+
+**Ответ:**
+
+```json
+[
+  {
+    "id": "08429b71-6836-50d5-018a-ad5308c5002c",
+    "name": "Доставки по рекламе",
+    "reportType": "DELIVERIES",
+    "groupByRowFields": ["Department", "MarketingSource"],
+    "groupByColFields": ["Delivery.IsDelivery"],
+    "aggregateFields": ["UniqOrderId.OrdersCount", "DishDiscountSumInt"],
+    "filters": {
+      "DeletedWithWriteoff": {
+        "filterType": "IncludeValues",
+        "values": ["NOT_DELETED"]
+      }
+    }
+  }
+]
+```
+
 ## Разработка
 
 ### Структура хэндлера
@@ -438,6 +545,7 @@ handlers := []utils.HandlerInterface{
     olap.NewOlapHandler(),
     fields.NewFieldsHandler(),
     olapbody.NewOlapBodyHandler(),
+    olappresets.NewOlapPresetsHandler(),
     // Ваш новый хэндлер
 }
 

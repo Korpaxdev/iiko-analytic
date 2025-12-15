@@ -6,6 +6,7 @@ import (
 	"iiko-analytic/internal/api/routes/fields"
 	"iiko-analytic/internal/api/routes/olap"
 	olapbody "iiko-analytic/internal/api/routes/olap_body"
+	olappresets "iiko-analytic/internal/api/routes/olap_presets"
 	"iiko-analytic/internal/api/utils"
 	"log"
 )
@@ -16,6 +17,7 @@ func main() {
 		olap.NewOlapHandler(),
 		fields.NewFieldsHandler(),
 		olapbody.NewOlapBodyHandler(),
+		olappresets.NewOlapPresetsHandler(),
 	}
 
 	// Добавляем статические хендлеры

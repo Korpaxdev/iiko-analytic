@@ -8,6 +8,7 @@ import (
 type OlapParams struct {
 	ReportType       utils.ReportType       `json:"reportType" validate:"required,oneof=SALES TRANSACTIONS"`
 	GroupByRowFields []utils.GroupField     `json:"groupByRowFields"`
+	GroupByColFields []utils.GroupField     `json:"groupByColFields"`
 	AggregateFields  []utils.AggregateField `json:"aggregateFields"`
 	Filters          map[string]Filter      `json:"filters" validate:"dive"`
 	From             time.Time              `json:"from" validate:"required"`

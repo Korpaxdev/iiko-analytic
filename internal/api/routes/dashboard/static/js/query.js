@@ -7,7 +7,8 @@ async function executeQuery() {
   const reportType = document.getElementById("reportType").value;
   const from = document.getElementById("fromDate").value;
   const to = document.getElementById("toDate").value;
-  const groupByRowFields = window.selectedGroupByFields;
+  const groupByRowFields = window.selectedGroupByRowFields;
+  const groupByColFields = window.selectedGroupByColFields;
   const aggregateFields = window.selectedAggregateFields;
   const filters = getFilters();
 
@@ -33,6 +34,7 @@ async function executeQuery() {
         from,
         to,
         groupByRowFields,
+        groupByColFields,
         aggregateFields,
         filters,
       }),
@@ -101,7 +103,8 @@ async function constructQuery() {
   const reportType = document.getElementById("reportType").value;
   const from = document.getElementById("fromDate").value;
   const to = document.getElementById("toDate").value;
-  const groupByRowFields = window.selectedGroupByFields;
+  const groupByRowFields = window.selectedGroupByRowFields;
+  const groupByColFields = window.selectedGroupByColFields;
   const aggregateFields = window.selectedAggregateFields;
   const filters = getFilters();
 
@@ -127,6 +130,7 @@ async function constructQuery() {
         from,
         to,
         groupByRowFields,
+        groupByColFields,
         aggregateFields,
         filters,
       }),
@@ -145,4 +149,3 @@ async function constructQuery() {
     showLoading(false);
   }
 }
-

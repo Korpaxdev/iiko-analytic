@@ -14,13 +14,29 @@ type Filter struct {
 	Values     []string       `json:"values" validate:"required"`
 }
 
-type OlapBody struct {
+type OlapConnectionBody struct {
 	BaseURL      string `json:"baseURL" validate:"required,url"`
 	User         string `json:"user" validate:"required"`
 	PasswordHash string `json:"passwordHash" validate:"required"`
+}
+
+func (b *OlapConnectionBody) Validate(validator *utils.Validator) fiber.Map {
+	errors, err := validator.Validate(b)
+	if err != nil {
+		return fiber.Map{
+			"error":   err.Error(),
+			"details": errors,
+		}
+	}
+	return nil
+}
+
+type OlapBody struct {
+	OlapConnectionBody
 
 	ReportType       iikoUtils.ReportType `json:"reportType" validate:"required,oneof=SALES TRANSACTIONS"`
 	GroupByRowFields []string             `json:"groupByRowFields"`
+	GroupByColFields []string             `json:"groupByColFields"`
 	AggregateFields  []string             `json:"aggregateFields"`
 	Filters          map[string]Filter    `json:"filters" validate:"dive"`
 	From             utils.Date           `json:"from" validate:"required"`
@@ -54,6 +70,10 @@ func (b *OlapBody) ToParams() dto.OlapParams {
 		func(field string, _ int) iikoUtils.GroupField {
 			return iikoUtils.GroupField(field)
 		})
+	groupByColFields := lo.Map(b.GroupByColFields,
+		func(field string, _ int) iikoUtils.GroupField {
+			return iikoUtils.GroupField(field)
+		})
 	filters := lo.MapValues(b.Filters,
 		func(filter Filter, _ string) dto.Filter {
 			return dto.Filter{
@@ -65,6 +85,7 @@ func (b *OlapBody) ToParams() dto.OlapParams {
 		ReportType:       reportType,
 		AggregateFields:  aggregateFields,
 		GroupByRowFields: groupByRowFields,
+		GroupByColFields: groupByColFields,
 		Filters:          filters,
 		From:             b.From.Time(),
 		To:               b.To.Time(),

@@ -12,7 +12,12 @@ function checkAndLoadFields() {
   const reportType = document.getElementById("reportType").value;
 
   // Загружаем поля только если все данные подключения заполнены и поля еще не загружены
-  if (baseURL && user && passwordHash && window.availableFieldsByReportType[reportType] === null) {
+  if (
+    baseURL &&
+    user &&
+    passwordHash &&
+    window.availableFieldsByReportType[reportType] === null
+  ) {
     loadFields();
   }
 }
@@ -52,46 +57,46 @@ async function loadFields() {
   }
 }
 
-// Group By Fields
-function addGroupByField() {
-  const input = document.getElementById("groupByFieldInput");
+// Group By Row Fields
+function addGroupByRowField() {
+  const input = document.getElementById("groupByRowFieldInput");
   const value = input.value.trim();
 
   if (window.editingField) {
-    const index = window.selectedGroupByFields.indexOf(window.editingField);
+    const index = window.selectedGroupByRowFields.indexOf(window.editingField);
     if (index !== -1 && value) {
-      window.selectedGroupByFields[index] = value;
+      window.selectedGroupByRowFields[index] = value;
     }
     window.editingField = null;
-  } else if (value && !window.selectedGroupByFields.includes(value)) {
-    window.selectedGroupByFields.push(value);
+  } else if (value && !window.selectedGroupByRowFields.includes(value)) {
+    window.selectedGroupByRowFields.push(value);
   }
 
-  renderGroupByFields();
+  renderGroupByRowFields();
   input.value = "";
-  document.getElementById("groupByAutocomplete").classList.add("hidden");
-  window.autocompleteIndex.groupBy = -1;
+  document.getElementById("groupByRowAutocomplete").classList.add("hidden");
+  window.autocompleteIndex.groupByRow = -1;
 }
 
-function removeGroupByField(field) {
-  window.selectedGroupByFields = window.selectedGroupByFields.filter(
+function removeGroupByRowField(field) {
+  window.selectedGroupByRowFields = window.selectedGroupByRowFields.filter(
     (f) => f !== field
   );
-  renderGroupByFields();
+  renderGroupByRowFields();
 }
 
-function editGroupByField(field) {
+function editGroupByRowField(field) {
   window.editingField = field;
-  document.getElementById("groupByFieldInput").value = field;
-  document.getElementById("groupByFieldInput").focus();
+  document.getElementById("groupByRowFieldInput").value = field;
+  document.getElementById("groupByRowFieldInput").focus();
 }
 
-function renderGroupByFields() {
-  const container = document.getElementById("groupByFieldsContainer");
+function renderGroupByRowFields() {
+  const container = document.getElementById("groupByRowFieldsContainer");
   container.innerHTML = "";
   const availableFields = getCurrentFields();
 
-  window.selectedGroupByFields.forEach((field) => {
+  window.selectedGroupByRowFields.forEach((field) => {
     const tag = document.createElement("span");
     tag.className =
       "inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm cursor-pointer hover:bg-blue-200";
@@ -102,13 +107,79 @@ function renderGroupByFields() {
       : field;
 
     tag.innerHTML = `
-      <span onclick="editGroupByField('${field.replace(/'/g, "\\'")}')">
+      <span onclick="editGroupByRowField('${field.replace(/'/g, "\\'")}')">
         ${displayText}
       </span>
-      <button onclick="event.stopPropagation(); removeGroupByField('${field.replace(
+      <button onclick="event.stopPropagation(); removeGroupByRowField('${field.replace(
         /'/g,
         "\\'"
       )}');" class="hover:text-blue-600">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    `;
+    container.appendChild(tag);
+  });
+}
+
+// Group By Col Fields
+function addGroupByColField() {
+  const input = document.getElementById("groupByColFieldInput");
+  const value = input.value.trim();
+
+  if (window.editingField) {
+    const index = window.selectedGroupByColFields.indexOf(window.editingField);
+    if (index !== -1 && value) {
+      window.selectedGroupByColFields[index] = value;
+    }
+    window.editingField = null;
+  } else if (value && !window.selectedGroupByColFields.includes(value)) {
+    window.selectedGroupByColFields.push(value);
+  }
+
+  renderGroupByColFields();
+  input.value = "";
+  document.getElementById("groupByColAutocomplete").classList.add("hidden");
+  window.autocompleteIndex.groupByCol = -1;
+}
+
+function removeGroupByColField(field) {
+  window.selectedGroupByColFields = window.selectedGroupByColFields.filter(
+    (f) => f !== field
+  );
+  renderGroupByColFields();
+}
+
+function editGroupByColField(field) {
+  window.editingField = field;
+  document.getElementById("groupByColFieldInput").value = field;
+  document.getElementById("groupByColFieldInput").focus();
+}
+
+function renderGroupByColFields() {
+  const container = document.getElementById("groupByColFieldsContainer");
+  container.innerHTML = "";
+  const availableFields = getCurrentFields();
+
+  window.selectedGroupByColFields.forEach((field) => {
+    const tag = document.createElement("span");
+    tag.className =
+      "inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm cursor-pointer hover:bg-purple-200";
+
+    const fieldName = availableFields[field]?.name || field;
+    const displayText = availableFields[field]
+      ? `${fieldName} (${field})`
+      : field;
+
+    tag.innerHTML = `
+      <span onclick="editGroupByColField('${field.replace(/'/g, "\\'")}')">
+        ${displayText}
+      </span>
+      <button onclick="event.stopPropagation(); removeGroupByColField('${field.replace(
+        /'/g,
+        "\\'"
+      )}');" class="hover:text-purple-600">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
         </svg>
@@ -190,8 +261,15 @@ function normalizeSearchString(str) {
 }
 
 function handleAutocompleteNavigation(e, type) {
-  const autocompleteId =
-    type === "groupBy" ? "groupByAutocomplete" : "aggregateAutocomplete";
+  let autocompleteId;
+  if (type === "groupByRow") {
+    autocompleteId = "groupByRowAutocomplete";
+  } else if (type === "groupByCol") {
+    autocompleteId = "groupByColAutocomplete";
+  } else if (type === "aggregate") {
+    autocompleteId = "aggregateAutocomplete";
+  }
+
   const autocomplete = document.getElementById(autocompleteId);
   const items = autocomplete.querySelectorAll("div.autocomplete-item");
 
@@ -232,13 +310,20 @@ function updateAutocompleteHighlight(items, index) {
 }
 
 function handleAutocomplete(searchText, type) {
-  const autocompleteId =
-    type === "groupBy" ? "groupByAutocomplete" : "aggregateAutocomplete";
+  let autocompleteId, selectedFields;
+
+  if (type === "groupByRow") {
+    autocompleteId = "groupByRowAutocomplete";
+    selectedFields = window.selectedGroupByRowFields;
+  } else if (type === "groupByCol") {
+    autocompleteId = "groupByColAutocomplete";
+    selectedFields = window.selectedGroupByColFields;
+  } else if (type === "aggregate") {
+    autocompleteId = "aggregateAutocomplete";
+    selectedFields = window.selectedAggregateFields;
+  }
+
   const autocomplete = document.getElementById(autocompleteId);
-  const selectedFields =
-    type === "groupBy"
-      ? window.selectedGroupByFields
-      : window.selectedAggregateFields;
   const availableFields = getCurrentFields();
 
   window.autocompleteIndex[type] = -1;
@@ -255,8 +340,12 @@ function handleAutocomplete(searchText, type) {
 
   const searchNormalized = normalizeSearchString(searchText);
   const filtered = Object.entries(availableFields).filter(([key, field]) => {
-    const allowed =
-      type === "groupBy" ? field.groupingAllowed : field.aggregationAllowed;
+    let allowed;
+    if (type === "groupByRow" || type === "groupByCol") {
+      allowed = field.groupingAllowed;
+    } else if (type === "aggregate") {
+      allowed = field.aggregationAllowed;
+    }
 
     const keyNormalized = normalizeSearchString(key);
     const nameNormalized = normalizeSearchString(field.name);
@@ -285,10 +374,13 @@ function handleAutocomplete(searchText, type) {
       <div class="text-xs text-gray-500 dark:text-gray-400">${key}</div>
     `;
     item.onclick = () => {
-      if (type === "groupBy") {
-        document.getElementById("groupByFieldInput").value = key;
-        addGroupByField();
-      } else {
+      if (type === "groupByRow") {
+        document.getElementById("groupByRowFieldInput").value = key;
+        addGroupByRowField();
+      } else if (type === "groupByCol") {
+        document.getElementById("groupByColFieldInput").value = key;
+        addGroupByColField();
+      } else if (type === "aggregate") {
         document.getElementById("aggregateFieldInput").value = key;
         addAggregateField();
       }
@@ -296,4 +388,3 @@ function handleAutocomplete(searchText, type) {
     autocomplete.appendChild(item);
   });
 }
-

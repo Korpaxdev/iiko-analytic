@@ -85,9 +85,7 @@ function loadConnectionSettings() {
 
 function clearConnectionSettings() {
   if (
-    confirm(
-      "Вы уверены что хотите очистить сохраненные данные подключения?"
-    )
+    confirm("Вы уверены что хотите очистить сохраненные данные подключения?")
   ) {
     localStorage.removeItem("olapConnectionSettings");
     document.getElementById("baseURL").value = "";
@@ -98,10 +96,14 @@ function clearConnectionSettings() {
       SALES: null,
       TRANSACTIONS: null,
     };
-    window.selectedGroupByFields = [];
+    window.presets = null;
+    window.selectedGroupByRowFields = [];
+    window.selectedGroupByColFields = [];
     window.selectedAggregateFields = [];
-    renderGroupByFields();
+    renderGroupByRowFields();
+    renderGroupByColFields();
     renderAggregateFields();
+    updatePresetsSelect();
   }
 }
 
@@ -121,8 +123,5 @@ function formatNumber(value) {
 
   const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 
-  return decimalPart
-    ? `${formattedInteger}.${decimalPart}`
-    : formattedInteger;
+  return decimalPart ? `${formattedInteger}.${decimalPart}` : formattedInteger;
 }
-

@@ -126,14 +126,16 @@ func (s *ServerAPI) getCacheKey(params dto.OlapParams) string {
 
 	slices.Sort(params.AggregateFields)
 	slices.Sort(params.GroupByRowFields)
+	slices.Sort(params.GroupByColFields)
 
 	keyData := map[string]any{
-		"reportType":      string(params.ReportType),
-		"aggregateFields": params.AggregateFields,
-		"groupFields":     params.GroupByRowFields,
-		"filters":         s.filtersToMap(params.Filters),
-		"from":            params.From.Format("2006-01-02"),
-		"to":              params.To.Format("2006-01-02"),
+		"reportType":       string(params.ReportType),
+		"aggregateFields":  params.AggregateFields,
+		"groupByRowFields": params.GroupByRowFields,
+		"groupByColFields": params.GroupByColFields,
+		"filters":          s.filtersToMap(params.Filters),
+		"from":             params.From.Format("2006-01-02"),
+		"to":               params.To.Format("2006-01-02"),
 	}
 	data, _ := json.Marshal(keyData)
 	hash := md5.Sum(data)
@@ -142,6 +144,11 @@ func (s *ServerAPI) getCacheKey(params dto.OlapParams) string {
 
 func (s *ServerAPI) OlapBody(params dto.OlapParams) map[string]any {
 	bodyGroupByRowFields := lo.Map(params.GroupByRowFields,
+		func(groupField utils.GroupField, _ int) string {
+			return string(groupField)
+		})
+
+	bodyGroupByColFields := lo.Map(params.GroupByColFields,
 		func(groupField utils.GroupField, _ int) string {
 			return string(groupField)
 		})
@@ -158,6 +165,7 @@ func (s *ServerAPI) OlapBody(params dto.OlapParams) map[string]any {
 	body := map[string]any{
 		"reportType":       string(params.ReportType),
 		"groupByRowFields": bodyGroupByRowFields,
+		"groupByColFields": bodyGroupByColFields,
 		"aggregateFields":  bodyAggregateFields,
 		"filters":          bodyFilters,
 	}
@@ -214,6 +222,24 @@ func (s *ServerAPI) Fields(reportType utils.ReportType) (map[string]any, error) 
 		SetQueryParam("key", s.token).
 		SetQueryParam("reportType", string(reportType)).
 		Get(routes.OlapColumnsRoute)
+
+	if err = utils.HandleResponse(response, err, &dto); err != nil {
+		return dto, err
+	}
+
+	return dto, nil
+}
+
+func (s *ServerAPI) OlapPresets() ([]map[string]any, error) {
+	var dto = []map[string]any{}
+
+	if err := s.Login(); err != nil {
+		return dto, err
+	}
+
+	response, err := s.client.R().
+		SetQueryParam("key", s.token).
+		Get(routes.OlapPresetsRoute)
 
 	if err = utils.HandleResponse(response, err, &dto); err != nil {
 		return dto, err
