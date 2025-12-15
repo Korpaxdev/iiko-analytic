@@ -12,8 +12,32 @@ import (
 //go:embed templates/index.html
 var htmlPage string
 
+//go:embed static/js/main.js
+var mainJS string
+
+//go:embed static/js/utils.js
+var utilsJS string
+
+//go:embed static/js/fields.js
+var fieldsJS string
+
+//go:embed static/js/filters.js
+var filtersJS string
+
+//go:embed static/js/query.js
+var queryJS string
+
+//go:embed static/js/json-highlight.js
+var jsonHighlightJS string
+
 var (
-	htmlETag string
+	htmlETag            string
+	mainJSETag          string
+	utilsJSETag         string
+	fieldsJSETag        string
+	filtersJSETag       string
+	queryJSETag         string
+	jsonHighlightJSETag string
 )
 
 const (
@@ -23,12 +47,47 @@ const (
 
 func init() {
 	// Генерируем ETag при запуске
-	hash := sha256.Sum256([]byte(htmlPage))
-	htmlETag = fmt.Sprintf(`"%x"`, hash[:8])
+	htmlETag = generateETag(htmlPage)
+	mainJSETag = generateETag(mainJS)
+	utilsJSETag = generateETag(utilsJS)
+	fieldsJSETag = generateETag(fieldsJS)
+	filtersJSETag = generateETag(filtersJS)
+	queryJSETag = generateETag(queryJS)
+	jsonHighlightJSETag = generateETag(jsonHighlightJS)
+}
+
+func generateETag(content string) string {
+	hash := sha256.Sum256([]byte(content))
+	return fmt.Sprintf(`"%x"`, hash[:8])
 }
 
 func NewDashboardHandler() utils.HandlerInterface {
 	return utils.NewHandler(Method, Route, dashboardHandler)
+}
+
+func NewStaticHandler(path, content, etag string) utils.HandlerInterface {
+	return utils.NewHandler(fiber.MethodGet, path, func(c *fiber.Ctx) error {
+		if c.Get("If-None-Match") == etag {
+			return c.SendStatus(fiber.StatusNotModified)
+		}
+
+		c.Set("Cache-Control", "public, max-age=31536000, immutable") // 1 год для статики
+		c.Set("ETag", etag)
+		c.Set("Content-Type", "application/javascript; charset=utf-8")
+
+		return c.SendString(content)
+	})
+}
+
+func GetStaticHandlers() []utils.HandlerInterface {
+	return []utils.HandlerInterface{
+		NewStaticHandler("/static/js/main.js", mainJS, mainJSETag),
+		NewStaticHandler("/static/js/utils.js", utilsJS, utilsJSETag),
+		NewStaticHandler("/static/js/fields.js", fieldsJS, fieldsJSETag),
+		NewStaticHandler("/static/js/filters.js", filtersJS, filtersJSETag),
+		NewStaticHandler("/static/js/query.js", queryJS, queryJSETag),
+		NewStaticHandler("/static/js/json-highlight.js", jsonHighlightJS, jsonHighlightJSETag),
+	}
 }
 
 func dashboardHandler(c *fiber.Ctx) error {

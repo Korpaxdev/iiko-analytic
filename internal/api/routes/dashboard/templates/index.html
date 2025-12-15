@@ -10,15 +10,65 @@
         darkMode: "class",
       };
     </script>
+    <!-- JavaScript modules -->
+    <script src="/static/js/utils.js" defer></script>
+    <script src="/static/js/fields.js" defer></script>
+    <script src="/static/js/filters.js" defer></script>
+    <script src="/static/js/query.js" defer></script>
+    <script src="/static/js/json-highlight.js" defer></script>
+    <script src="/static/js/main.js" defer></script>
     <style>
       /* Prevent layout shift when scrollbar appears */
       html {
         scrollbar-gutter: stable;
       }
 
-      /* Custom scrollbar styles */
+      /* Global scrollbar styles for WebKit browsers (Chrome, Safari, Edge) */
+      * {
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 #f1f5f9;
+      }
+
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 4px;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+
+      /* Dark theme scrollbar */
+      .dark * {
+        scrollbar-color: #475569 #1e293b;
+      }
+
+      .dark ::-webkit-scrollbar-track {
+        background: #1e293b;
+      }
+
+      .dark ::-webkit-scrollbar-thumb {
+        background: #475569;
+      }
+
+      .dark ::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
+      }
+
+      /* Custom scrollbar class for compatibility */
       .custom-scrollbar::-webkit-scrollbar {
         width: 8px;
+        height: 8px;
       }
 
       .custom-scrollbar::-webkit-scrollbar-track {
@@ -35,7 +85,6 @@
         background: #94a3b8;
       }
 
-      /* Dark theme scrollbar */
       .dark .custom-scrollbar::-webkit-scrollbar-track {
         background: #1e293b;
       }
@@ -48,7 +97,6 @@
         background: #64748b;
       }
 
-      /* Firefox scrollbar */
       .custom-scrollbar {
         scrollbar-width: thin;
         scrollbar-color: #cbd5e1 #f1f5f9;
@@ -56,6 +104,45 @@
 
       .dark .custom-scrollbar {
         scrollbar-color: #475569 #1e293b;
+      }
+
+      /* JSON Syntax Highlighting */
+      .json-syntax {
+        color: #24292e; /* Цвет для скобок, запятых и прочих символов */
+      }
+      .dark .json-syntax {
+        color: #d4d4d4; /* Цвет для скобок на темной теме */
+      }
+      .json-syntax .json-key {
+        color: #0451a5;
+        font-weight: 600;
+      }
+      .dark .json-syntax .json-key {
+        color: #9cdcfe;
+      }
+      .json-syntax .json-string {
+        color: #a31515;
+      }
+      .dark .json-syntax .json-string {
+        color: #ce9178;
+      }
+      .json-syntax .json-number {
+        color: #098658;
+      }
+      .dark .json-syntax .json-number {
+        color: #b5cea8;
+      }
+      .json-syntax .json-boolean {
+        color: #0000ff;
+      }
+      .dark .json-syntax .json-boolean {
+        color: #569cd6;
+      }
+      .json-syntax .json-null {
+        color: #0000ff;
+      }
+      .dark .json-syntax .json-null {
+        color: #569cd6;
       }
     </style>
   </head>
@@ -210,14 +297,6 @@
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             />
           </div>
-
-          <button
-            id="loadFieldsButton"
-            onclick="loadFields()"
-            class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md transition duration-200"
-          >
-            Загрузить доступные поля
-          </button>
         </div>
 
         <!-- Fields Selection -->
@@ -326,12 +405,45 @@
 
       <!-- Execute Button -->
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
-        <button
-          onclick="executeQuery()"
-          class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-md transition duration-200 text-lg"
-        >
-          Выполнить запрос
-        </button>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <button
+            onclick="executeQuery()"
+            class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-md transition duration-200 text-lg"
+          >
+            Выполнить запрос
+          </button>
+          <button
+            onclick="constructQuery()"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md transition duration-200 text-lg"
+          >
+            Сконструировать запрос
+          </button>
+        </div>
+      </div>
+
+      <!-- JSON Display Container -->
+      <div
+        id="jsonContainer"
+        class="hidden bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6"
+      >
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-semibold text-gray-700 dark:text-gray-200">
+            JSON запроса
+          </h2>
+          <button
+            onclick="copyJson()"
+            class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition duration-200"
+            title="Копировать в буфер обмена"
+          >
+            Копировать
+          </button>
+        </div>
+        <div class="relative">
+          <pre
+            id="jsonOutput"
+            class="bg-gray-50 dark:bg-gray-900 rounded-md p-4 overflow-x-auto text-sm custom-scrollbar"
+          ><code id="jsonCode" class="json-syntax"></code></pre>
+        </div>
       </div>
 
       <!-- Loading Indicator -->
@@ -377,809 +489,5 @@
         </div>
       </div>
     </div>
-
-    <script>
-      let availableFieldsByReportType = {
-        SALES: null,
-        TRANSACTIONS: null,
-      };
-      let filterCount = 0;
-      let selectedGroupByFields = [];
-      let selectedAggregateFields = [];
-      let editingField = null;
-      let autocompleteIndex = {
-        groupBy: -1,
-        aggregate: -1,
-      };
-      let filterAutocompleteIndex = {};
-
-      function getCurrentFields() {
-        const reportType = document.getElementById("reportType").value;
-        return availableFieldsByReportType[reportType] || {};
-      }
-
-      function updateLoadFieldsButtonVisibility() {
-        const reportType = document.getElementById("reportType").value;
-        const button = document.getElementById("loadFieldsButton");
-        const fieldsLoaded = availableFieldsByReportType[reportType] !== null;
-
-        if (fieldsLoaded) {
-          button.classList.add("hidden");
-        } else {
-          button.classList.remove("hidden");
-        }
-      }
-
-      function toggleTheme() {
-        const html = document.documentElement;
-        const isDark = html.classList.contains("dark");
-
-        if (isDark) {
-          html.classList.remove("dark");
-          localStorage.setItem("theme", "light");
-        } else {
-          html.classList.add("dark");
-          localStorage.setItem("theme", "dark");
-        }
-      }
-
-      function initTheme() {
-        const savedTheme = localStorage.getItem("theme");
-        const prefersDark = window.matchMedia(
-          "(prefers-color-scheme: dark)"
-        ).matches;
-
-        if (savedTheme === "dark" || (!savedTheme && prefersDark)) {
-          document.documentElement.classList.add("dark");
-        }
-      }
-
-      initTheme();
-
-      document.addEventListener("DOMContentLoaded", () => {
-        const today = new Date();
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-
-        document.getElementById("toDate").valueAsDate = today;
-        document.getElementById("fromDate").valueAsDate = yesterday;
-
-        document
-          .getElementById("groupByFieldInput")
-          .addEventListener("keypress", (e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              addGroupByField();
-            }
-          });
-
-        document
-          .getElementById("groupByFieldInput")
-          .addEventListener("keydown", (e) => {
-            handleAutocompleteNavigation(e, "groupBy");
-          });
-
-        document
-          .getElementById("aggregateFieldInput")
-          .addEventListener("keypress", (e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              addAggregateField();
-            }
-          });
-
-        document
-          .getElementById("aggregateFieldInput")
-          .addEventListener("keydown", (e) => {
-            handleAutocompleteNavigation(e, "aggregate");
-          });
-
-        document
-          .getElementById("groupByFieldInput")
-          .addEventListener("input", (e) => {
-            handleAutocomplete(e.target.value, "groupBy");
-          });
-
-        document
-          .getElementById("aggregateFieldInput")
-          .addEventListener("input", (e) => {
-            handleAutocomplete(e.target.value, "aggregate");
-          });
-
-        document.addEventListener("click", (e) => {
-          if (
-            !e.target.closest("#groupByFieldInput") &&
-            !e.target.closest("#groupByAutocomplete")
-          ) {
-            document
-              .getElementById("groupByAutocomplete")
-              .classList.add("hidden");
-            autocompleteIndex.groupBy = -1;
-          }
-          if (
-            !e.target.closest("#aggregateFieldInput") &&
-            !e.target.closest("#aggregateAutocomplete")
-          ) {
-            document
-              .getElementById("aggregateAutocomplete")
-              .classList.add("hidden");
-            autocompleteIndex.aggregate = -1;
-          }
-        });
-
-        document.getElementById("reportType").addEventListener("change", () => {
-          saveConnectionSettings();
-          updateLoadFieldsButtonVisibility();
-
-          const baseURL = document.getElementById("baseURL").value;
-          const user = document.getElementById("user").value;
-          const passwordHash = document.getElementById("passwordHash").value;
-
-          if (baseURL && user && passwordHash) {
-            const reportType = document.getElementById("reportType").value;
-            if (availableFieldsByReportType[reportType] === null) {
-              loadFields();
-            }
-          }
-        });
-
-        document
-          .getElementById("baseURL")
-          .addEventListener("input", saveConnectionSettings);
-        document
-          .getElementById("user")
-          .addEventListener("input", saveConnectionSettings);
-        document
-          .getElementById("passwordHash")
-          .addEventListener("input", saveConnectionSettings);
-
-        loadConnectionSettings();
-        updateLoadFieldsButtonVisibility();
-      });
-
-      async function loadFields() {
-        const baseURL = document.getElementById("baseURL").value;
-        const user = document.getElementById("user").value;
-        const passwordHash = document.getElementById("passwordHash").value;
-        const reportType = document.getElementById("reportType").value;
-
-        if (!baseURL || !user || !passwordHash) {
-          showError("Заполните все поля подключения");
-          return;
-        }
-
-        showLoading(true);
-        hideError();
-
-        try {
-          const response = await fetch("/fields", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ baseURL, user, passwordHash, reportType }),
-          });
-
-          const data = await response.json();
-
-          if (!response.ok) {
-            throw new Error(data.error || "Failed to load fields");
-          }
-
-          availableFieldsByReportType[reportType] = data;
-          updateLoadFieldsButtonVisibility();
-          showLoading(false);
-        } catch (error) {
-          showError(error.message);
-          showLoading(false);
-        }
-      }
-
-      function saveConnectionSettings() {
-        const settings = {
-          baseURL: document.getElementById("baseURL").value,
-          user: document.getElementById("user").value,
-          passwordHash: document.getElementById("passwordHash").value,
-          reportType: document.getElementById("reportType").value,
-        };
-        localStorage.setItem(
-          "olapConnectionSettings",
-          JSON.stringify(settings)
-        );
-      }
-
-      function loadConnectionSettings() {
-        const saved = localStorage.getItem("olapConnectionSettings");
-        if (saved) {
-          try {
-            const settings = JSON.parse(saved);
-            document.getElementById("baseURL").value = settings.baseURL || "";
-            document.getElementById("user").value = settings.user || "";
-            document.getElementById("passwordHash").value =
-              settings.passwordHash || "";
-            document.getElementById("reportType").value =
-              settings.reportType || "SALES";
-          } catch (e) {}
-        }
-      }
-
-      function clearConnectionSettings() {
-        if (
-          confirm(
-            "Вы уверены что хотите очистить сохраненные данные подключения?"
-          )
-        ) {
-          localStorage.removeItem("olapConnectionSettings");
-          document.getElementById("baseURL").value = "";
-          document.getElementById("user").value = "";
-          document.getElementById("passwordHash").value = "";
-          document.getElementById("reportType").value = "SALES";
-          availableFieldsByReportType = {
-            SALES: null,
-            TRANSACTIONS: null,
-          };
-          selectedGroupByFields = [];
-          selectedAggregateFields = [];
-          renderGroupByFields();
-          renderAggregateFields();
-          updateLoadFieldsButtonVisibility();
-        }
-      }
-
-      function addGroupByField() {
-        const input = document.getElementById("groupByFieldInput");
-        const value = input.value.trim();
-
-        if (editingField) {
-          const index = selectedGroupByFields.indexOf(editingField);
-          if (index !== -1 && value) {
-            selectedGroupByFields[index] = value;
-          }
-          editingField = null;
-        } else if (value && !selectedGroupByFields.includes(value)) {
-          selectedGroupByFields.push(value);
-        }
-
-        renderGroupByFields();
-        input.value = "";
-        document.getElementById("groupByAutocomplete").classList.add("hidden");
-        autocompleteIndex.groupBy = -1;
-      }
-
-      function removeGroupByField(field) {
-        selectedGroupByFields = selectedGroupByFields.filter(
-          (f) => f !== field
-        );
-        renderGroupByFields();
-      }
-
-      function editGroupByField(field) {
-        editingField = field;
-        document.getElementById("groupByFieldInput").value = field;
-        document.getElementById("groupByFieldInput").focus();
-      }
-
-      function renderGroupByFields() {
-        const container = document.getElementById("groupByFieldsContainer");
-        container.innerHTML = "";
-        const availableFields = getCurrentFields();
-
-        selectedGroupByFields.forEach((field) => {
-          const tag = document.createElement("span");
-          tag.className =
-            "inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm cursor-pointer hover:bg-blue-200";
-
-          const fieldName = availableFields[field]?.name || field;
-          const displayText = availableFields[field]
-            ? `${fieldName} (${field})`
-            : field;
-
-          tag.innerHTML = `
-            <span onclick="editGroupByField('${field.replace(/'/g, "\\'")}')">
-              ${displayText}
-            </span>
-            <button onclick="event.stopPropagation(); removeGroupByField('${field.replace(
-              /'/g,
-              "\\'"
-            )}');" class="hover:text-blue-600">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-              </svg>
-            </button>
-          `;
-          container.appendChild(tag);
-        });
-      }
-
-      function addAggregateField() {
-        const input = document.getElementById("aggregateFieldInput");
-        const value = input.value.trim();
-
-        if (editingField) {
-          const index = selectedAggregateFields.indexOf(editingField);
-          if (index !== -1 && value) {
-            selectedAggregateFields[index] = value;
-          }
-          editingField = null;
-        } else if (value && !selectedAggregateFields.includes(value)) {
-          selectedAggregateFields.push(value);
-        }
-
-        renderAggregateFields();
-        input.value = "";
-        document
-          .getElementById("aggregateAutocomplete")
-          .classList.add("hidden");
-        autocompleteIndex.aggregate = -1;
-      }
-
-      function removeAggregateField(field) {
-        selectedAggregateFields = selectedAggregateFields.filter(
-          (f) => f !== field
-        );
-        renderAggregateFields();
-      }
-
-      function editAggregateField(field) {
-        editingField = field;
-        document.getElementById("aggregateFieldInput").value = field;
-        document.getElementById("aggregateFieldInput").focus();
-      }
-
-      function renderAggregateFields() {
-        const container = document.getElementById("aggregateFieldsContainer");
-        container.innerHTML = "";
-        const availableFields = getCurrentFields();
-
-        selectedAggregateFields.forEach((field) => {
-          const tag = document.createElement("span");
-          tag.className =
-            "inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm cursor-pointer hover:bg-green-200";
-
-          const fieldName = availableFields[field]?.name || field;
-          const displayText = availableFields[field]
-            ? `${fieldName} (${field})`
-            : field;
-
-          tag.innerHTML = `
-            <span onclick="editAggregateField('${field.replace(/'/g, "\\'")}')">
-              ${displayText}
-            </span>
-            <button onclick="event.stopPropagation(); removeAggregateField('${field.replace(
-              /'/g,
-              "\\'"
-            )}');" class="hover:text-green-600">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-              </svg>
-            </button>
-          `;
-          container.appendChild(tag);
-        });
-      }
-
-      function handleAutocompleteNavigation(e, type) {
-        const autocompleteId =
-          type === "groupBy" ? "groupByAutocomplete" : "aggregateAutocomplete";
-        const autocomplete = document.getElementById(autocompleteId);
-        const items = autocomplete.querySelectorAll("div.autocomplete-item");
-
-        if (items.length === 0) return;
-
-        if (e.key === "ArrowDown") {
-          e.preventDefault();
-          autocompleteIndex[type] = Math.min(
-            autocompleteIndex[type] + 1,
-            items.length - 1
-          );
-          updateAutocompleteHighlight(items, autocompleteIndex[type]);
-        } else if (e.key === "ArrowUp") {
-          e.preventDefault();
-          autocompleteIndex[type] = Math.max(autocompleteIndex[type] - 1, 0);
-          updateAutocompleteHighlight(items, autocompleteIndex[type]);
-        } else if (e.key === "Enter" && autocompleteIndex[type] >= 0) {
-          e.preventDefault();
-          items[autocompleteIndex[type]].click();
-        } else if (e.key === "Escape") {
-          autocomplete.classList.add("hidden");
-          autocompleteIndex[type] = -1;
-        }
-      }
-
-      function updateAutocompleteHighlight(items, index) {
-        items.forEach((item, i) => {
-          if (i === index) {
-            item.classList.add("bg-gray-200", "dark:bg-gray-600");
-            item.scrollIntoView({ block: "nearest" });
-          } else {
-            item.classList.remove("bg-gray-200", "dark:bg-gray-600");
-          }
-        });
-      }
-
-      function normalizeSearchString(str) {
-        // Убираем все разделители (точки, подчеркивания, дефисы, пробелы) и приводим к нижнему регистру
-        return str.toLowerCase().replace(/[.\-_\s]/g, "");
-      }
-
-      function handleAutocomplete(searchText, type) {
-        const autocompleteId =
-          type === "groupBy" ? "groupByAutocomplete" : "aggregateAutocomplete";
-        const autocomplete = document.getElementById(autocompleteId);
-        const selectedFields =
-          type === "groupBy" ? selectedGroupByFields : selectedAggregateFields;
-        const availableFields = getCurrentFields();
-
-        autocompleteIndex[type] = -1;
-
-        if (!searchText || searchText.length < 1) {
-          autocomplete.classList.add("hidden");
-          return;
-        }
-
-        if (!availableFields || Object.keys(availableFields).length === 0) {
-          autocomplete.classList.add("hidden");
-          return;
-        }
-
-        const searchNormalized = normalizeSearchString(searchText);
-        const filtered = Object.entries(availableFields).filter(
-          ([key, field]) => {
-            const allowed =
-              type === "groupBy"
-                ? field.groupingAllowed
-                : field.aggregationAllowed;
-
-            // Нормализуем ключ и имя поля для сравнения
-            const keyNormalized = normalizeSearchString(key);
-            const nameNormalized = normalizeSearchString(field.name);
-
-            const matchesSearch =
-              keyNormalized.includes(searchNormalized) ||
-              nameNormalized.includes(searchNormalized);
-            const notSelected = !selectedFields.includes(key);
-            return allowed && matchesSearch && notSelected;
-          }
-        );
-
-        if (filtered.length === 0) {
-          autocomplete.classList.add("hidden");
-          return;
-        }
-
-        autocomplete.innerHTML = "";
-        autocomplete.classList.remove("hidden");
-
-        filtered.slice(0, 10).forEach(([key, field]) => {
-          const item = document.createElement("div");
-          item.className =
-            "autocomplete-item px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm";
-          item.innerHTML = `
-            <div class="font-medium text-gray-900 dark:text-gray-100">${field.name}</div>
-            <div class="text-xs text-gray-500 dark:text-gray-400">${key}</div>
-          `;
-          item.onclick = () => {
-            if (type === "groupBy") {
-              document.getElementById("groupByFieldInput").value = key;
-              addGroupByField();
-            } else {
-              document.getElementById("aggregateFieldInput").value = key;
-              addAggregateField();
-            }
-          };
-          autocomplete.appendChild(item);
-        });
-      }
-
-      function addFilter() {
-        const filtersList = document.getElementById("filtersList");
-        const filterId = filterCount++;
-
-        const filterDiv = document.createElement("div");
-        filterDiv.className =
-          "border border-gray-300 dark:border-gray-600 rounded-md p-3 bg-gray-50 dark:bg-gray-700";
-        filterDiv.id = "filter-" + filterId;
-        filterDiv.innerHTML = `
-                <div class="mb-2">
-                    <div class="relative mb-2">
-                        <input type="text" placeholder="Field name" id="filter-field-${filterId}" class="filter-field w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" autocomplete="off">
-                        <div id="filter-autocomplete-${filterId}" class="custom-scrollbar hidden absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-y-auto"></div>
-                    </div>
-                    <select class="filter-type w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm mb-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
-                        <option value="IncludeValues">Include Values</option>
-                        <option value="ExcludeValues">Exclude Values</option>
-                    </select>
-                    <input type="text" placeholder="Values (comma separated)" class="filter-values w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm mb-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
-                    <button onclick="removeFilter(${filterId})" class="w-full bg-red-500 hover:bg-red-600 text-white text-sm py-1 px-2 rounded">
-                        Удалить
-                    </button>
-                </div>
-            `;
-
-        filtersList.appendChild(filterDiv);
-
-        // Добавляем обработчики для автокомплита
-        const filterInput = document.getElementById(`filter-field-${filterId}`);
-        const filterAutocomplete = document.getElementById(
-          `filter-autocomplete-${filterId}`
-        );
-
-        filterInput.addEventListener("input", (e) => {
-          handleFilterAutocomplete(e.target.value, filterId);
-        });
-
-        filterInput.addEventListener("keydown", (e) => {
-          handleFilterAutocompleteNavigation(e, filterId);
-        });
-
-        // Закрытие автокомплита при клике вне его
-        document.addEventListener("click", (e) => {
-          if (
-            !e.target.closest(`#filter-field-${filterId}`) &&
-            !e.target.closest(`#filter-autocomplete-${filterId}`)
-          ) {
-            filterAutocomplete.classList.add("hidden");
-          }
-        });
-      }
-
-      function removeFilter(filterId) {
-        const filterDiv = document.getElementById("filter-" + filterId);
-        if (filterDiv) {
-          filterDiv.remove();
-          delete filterAutocompleteIndex[filterId];
-        }
-      }
-
-      function handleFilterAutocomplete(searchText, filterId) {
-        const autocomplete = document.getElementById(
-          `filter-autocomplete-${filterId}`
-        );
-        const availableFields = getCurrentFields();
-
-        filterAutocompleteIndex[filterId] = -1;
-
-        if (!searchText || searchText.length < 1) {
-          autocomplete.classList.add("hidden");
-          return;
-        }
-
-        if (!availableFields || Object.keys(availableFields).length === 0) {
-          autocomplete.classList.add("hidden");
-          return;
-        }
-
-        const searchNormalized = normalizeSearchString(searchText);
-        const filtered = Object.entries(availableFields).filter(
-          ([key, field]) => {
-            const keyNormalized = normalizeSearchString(key);
-            const nameNormalized = normalizeSearchString(field.name);
-
-            return (
-              keyNormalized.includes(searchNormalized) ||
-              nameNormalized.includes(searchNormalized)
-            );
-          }
-        );
-
-        if (filtered.length === 0) {
-          autocomplete.classList.add("hidden");
-          return;
-        }
-
-        autocomplete.innerHTML = "";
-        autocomplete.classList.remove("hidden");
-
-        filtered.slice(0, 10).forEach(([key, field]) => {
-          const item = document.createElement("div");
-          item.className =
-            "autocomplete-item px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm";
-          item.innerHTML = `
-            <div class="font-medium text-gray-900 dark:text-gray-100">${field.name}</div>
-            <div class="text-xs text-gray-500 dark:text-gray-400">${key}</div>
-          `;
-          item.onclick = () => {
-            document.getElementById(`filter-field-${filterId}`).value = key;
-            autocomplete.classList.add("hidden");
-            filterAutocompleteIndex[filterId] = -1;
-          };
-          autocomplete.appendChild(item);
-        });
-      }
-
-      function handleFilterAutocompleteNavigation(e, filterId) {
-        const autocomplete = document.getElementById(
-          `filter-autocomplete-${filterId}`
-        );
-        const items = autocomplete.querySelectorAll("div.autocomplete-item");
-
-        if (items.length === 0) return;
-
-        if (e.key === "ArrowDown") {
-          e.preventDefault();
-          filterAutocompleteIndex[filterId] = Math.min(
-            (filterAutocompleteIndex[filterId] || -1) + 1,
-            items.length - 1
-          );
-          updateAutocompleteHighlight(items, filterAutocompleteIndex[filterId]);
-        } else if (e.key === "ArrowUp") {
-          e.preventDefault();
-          filterAutocompleteIndex[filterId] = Math.max(
-            (filterAutocompleteIndex[filterId] || 0) - 1,
-            0
-          );
-          updateAutocompleteHighlight(items, filterAutocompleteIndex[filterId]);
-        } else if (
-          e.key === "Enter" &&
-          filterAutocompleteIndex[filterId] >= 0
-        ) {
-          e.preventDefault();
-          items[filterAutocompleteIndex[filterId]].click();
-        } else if (e.key === "Escape") {
-          autocomplete.classList.add("hidden");
-          filterAutocompleteIndex[filterId] = -1;
-        }
-      }
-
-      function getFilters() {
-        const filters = {};
-        const filterDivs = document.querySelectorAll("#filtersList > div");
-
-        filterDivs.forEach((div) => {
-          const field = div.querySelector(".filter-field").value.trim();
-          const type = div.querySelector(".filter-type").value;
-          const values = div
-            .querySelector(".filter-values")
-            .value.split(",")
-            .map((v) => v.trim())
-            .filter((v) => v);
-
-          if (field && values.length > 0) {
-            filters[field] = {
-              filterType: type,
-              values: values,
-            };
-          }
-        });
-
-        return filters;
-      }
-
-      async function executeQuery() {
-        const baseURL = document.getElementById("baseURL").value;
-        const user = document.getElementById("user").value;
-        const passwordHash = document.getElementById("passwordHash").value;
-        const reportType = document.getElementById("reportType").value;
-        const from = document.getElementById("fromDate").value;
-        const to = document.getElementById("toDate").value;
-        const groupByRowFields = selectedGroupByFields;
-        const aggregateFields = selectedAggregateFields;
-        const filters = getFilters();
-
-        if (!baseURL || !user || !passwordHash || !from || !to) {
-          showError("Заполните все обязательные поля");
-          return;
-        }
-
-        showLoading(true);
-        hideError();
-        hideResults();
-
-        try {
-          const response = await fetch("/olap", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              baseURL,
-              user,
-              passwordHash,
-              reportType,
-              from,
-              to,
-              groupByRowFields,
-              aggregateFields,
-              filters,
-            }),
-          });
-
-          const data = await response.json();
-
-          if (!response.ok) {
-            throw new Error(JSON.stringify(data, null, 2));
-          }
-
-          displayResults(data);
-          showLoading(false);
-        } catch (error) {
-          showError(error.message);
-          showLoading(false);
-        }
-      }
-
-      function formatNumber(value) {
-        if (value === null || value === undefined || value === "") {
-          return "";
-        }
-
-        // Проверяем, является ли значение числом
-        const num = Number(value);
-        if (isNaN(num)) {
-          return value;
-        }
-
-        // Разделяем на целую и дробную части
-        const parts = num.toString().split(".");
-        const integerPart = parts[0];
-        const decimalPart = parts[1];
-
-        // Форматируем целую часть с пробелами
-        const formattedInteger = integerPart.replace(
-          /\B(?=(\d{3})+(?!\d))/g,
-          " "
-        );
-
-        // Возвращаем с дробной частью если она есть
-        return decimalPart
-          ? `${formattedInteger}.${decimalPart}`
-          : formattedInteger;
-      }
-
-      function displayResults(data) {
-        if (!data || data.length === 0) {
-          showError("Нет данных для отображения");
-          return;
-        }
-
-        const tableHeader = document.getElementById("tableHeader");
-        const tableBody = document.getElementById("tableBody");
-
-        tableHeader.innerHTML = "";
-        tableBody.innerHTML = "";
-
-        const firstRow = data[0];
-        Object.keys(firstRow).forEach((key) => {
-          const th = document.createElement("th");
-          th.className =
-            "px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider";
-          th.textContent = key;
-          tableHeader.appendChild(th);
-        });
-
-        data.forEach((row, index) => {
-          const tr = document.createElement("tr");
-          tr.className =
-            index % 2 === 0
-              ? "bg-white dark:bg-gray-800"
-              : "bg-gray-50 dark:bg-gray-700";
-
-          Object.values(row).forEach((value) => {
-            const td = document.createElement("td");
-            td.className =
-              "px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100";
-            td.textContent = formatNumber(value);
-            tr.appendChild(td);
-          });
-
-          tableBody.appendChild(tr);
-        });
-
-        document.getElementById("resultsContainer").classList.remove("hidden");
-      }
-
-      function showLoading(show) {
-        document.getElementById("loading").classList.toggle("hidden", !show);
-      }
-
-      function hideError() {
-        document.getElementById("error").classList.add("hidden");
-      }
-
-      function showError(message) {
-        document.getElementById("errorMessage").textContent = message;
-        document.getElementById("error").classList.remove("hidden");
-      }
-
-      function hideResults() {
-        document.getElementById("resultsContainer").classList.add("hidden");
-      }
-    </script>
   </body>
 </html>

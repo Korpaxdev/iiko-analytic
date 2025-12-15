@@ -1,4 +1,4 @@
-package olap
+package olapbody
 
 import (
 	"iiko-analytic/internal/api/common"
@@ -10,27 +10,25 @@ import (
 )
 
 const (
-	Route  = "/olap"
+	Route  = "/olap-body"
 	Method = fiber.MethodPost
 )
 
-func NewOlapHandler() utils.HandlerInterface {
-	return utils.NewHandler(Method, Route, olapHandler)
+func NewOlapBodyHandler() utils.HandlerInterface {
+	return utils.NewHandler(Method, Route, olapBodyHandler)
 }
-func olapHandler(c *fiber.Ctx) error {
+
+func olapBodyHandler(c *fiber.Ctx) error {
 	var body common.OlapBody
 	if err := c.BodyParser(&body); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 	}
-
 	validate := utils.GetValidator()
-
 	if errors := body.Validate(validate); errors != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(errors)
 	}
-
 	serverAPI := iiko.NewServerAPI(
 		body.BaseURL,
 		body.User,
@@ -41,13 +39,5 @@ func olapHandler(c *fiber.Ctx) error {
 		go serverAPI.Logout()
 	}()
 
-	report, err := serverAPI.Olap(body.ToParams())
-
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
-		})
-	}
-
-	return c.JSON(report.Data)
+	return c.JSON(serverAPI.OlapBody(body.ToParams()))
 }

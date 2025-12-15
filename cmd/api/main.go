@@ -5,6 +5,7 @@ import (
 	"iiko-analytic/internal/api/routes/dashboard"
 	"iiko-analytic/internal/api/routes/fields"
 	"iiko-analytic/internal/api/routes/olap"
+	olapbody "iiko-analytic/internal/api/routes/olap_body"
 	"iiko-analytic/internal/api/utils"
 	"log"
 )
@@ -14,7 +15,12 @@ func main() {
 		dashboard.NewDashboardHandler(),
 		olap.NewOlapHandler(),
 		fields.NewFieldsHandler(),
+		olapbody.NewOlapBodyHandler(),
 	}
+
+	// Добавляем статические хендлеры
+	handlers = append(handlers, dashboard.GetStaticHandlers()...)
+
 	api := api.NewAPI()
 	api.SetupHandlers(handlers)
 	api.SetupMiddlewares()

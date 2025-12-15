@@ -14,7 +14,8 @@ REST API для работы с аналитикой iiko через OLAP-отч
 
 - Получение OLAP-отчетов из iiko
 - Получение списка доступных полей для отчетов
-- Веб-интерфейс для работы с API
+- Конструирование JSON запросов для iiko API
+- Веб-интерфейс с автоматической загрузкой полей и подсветкой JSON
 - Автоматическое кэширование запросов к iiko
 - Компрессия ответов (gzip/brotli)
 - HTTP/2 ready
@@ -62,11 +63,41 @@ air -c api.air.toml
 
 Веб-интерфейс (dashboard) для работы с API.
 
+**Возможности:**
+
+- Автоматическая загрузка доступных полей при заполнении данных подключения (с debounce)
+- Автокомплит для полей группировки, агрегации и фильтров
+- Две кнопки действий:
+  - **Выполнить запрос** - получение и отображение данных в таблице
+  - **Сконструировать запрос** - получение JSON тела запроса для iiko API с подсветкой синтаксиса
+- Поддержка темной темы
+- Сохранение настроек подключения в localStorage
+
+**Особенности:**
+
+- Модульная структура JavaScript (6 отдельных модулей)
+- ETag кэширование для всех статических ресурсов
+- Cache-Control: 1 год для JS, 1 час для HTML
+- HTTP/2 Server Push для CDN
+
+### `GET /static/js/*`
+
+Статические JavaScript модули для веб-интерфейса.
+
+**Модули:**
+
+- `main.js` - инициализация и глобальные переменные
+- `utils.js` - утилиты (тема, localStorage, debounce)
+- `fields.js` - работа с полями (Group By, Aggregate)
+- `filters.js` - работа с фильтрами
+- `query.js` - выполнение и конструирование запросов
+- `json-highlight.js` - подсветка синтаксиса JSON
+
 **Особенности:**
 
 - ETag кэширование
-- Cache-Control: 1 час
-- HTTP/2 Server Push для CDN
+- Cache-Control: 1 год (immutable)
+- Встраивание через Go embed
 
 ---
 
@@ -155,17 +186,14 @@ air -c api.air.toml
 **Response:**
 
 ```json
-{
-  "data": [
-    {
-      "DepartmentName": "Кухня",
-      "DishCategory": "Горячие блюда",
-      "UniqAmount.Profit": 15000.50,
-      "DishDiscountSum": 1200.00
-    },
-    ...
-  ]
-}
+[
+  {
+    "DepartmentName": "Кухня",
+    "DishCategory": "Горячие блюда",
+    "UniqAmount.Profit": 15000.50,
+    "DishDiscountSum": 1200.00
+  }
+]
 ```
 
 **Ошибки:**
@@ -179,6 +207,74 @@ air -c api.air.toml
 }
 ```
 
+---
+
+### `POST /olap-body`
+
+Конструирование JSON тела запроса для iiko OLAP API. Не выполняет запрос к iiko, а возвращает готовое тело запроса, которое можно использовать для прямого обращения к iiko API.
+
+**Request Body:**
+
+```json
+{
+  "baseURL": "https://your-iiko-instance.com",
+  "user": "your-username",
+  "passwordHash": "your-password-hash",
+  "reportType": "SALES",
+  "groupByRowFields": ["DepartmentName", "DishCategory"],
+  "aggregateFields": ["UniqAmount.Profit", "DishDiscountSum"],
+  "filters": {
+    "DepartmentName": {
+      "filterType": "IncludeValues",
+      "values": ["Кухня", "Бар"]
+    }
+  },
+  "from": "2024-01-01",
+  "to": "2024-01-31"
+}
+```
+
+**Параметры:**
+
+Идентичны параметрам endpoint `/olap`.
+
+**Response:**
+
+```json
+{
+  "reportType": "SALES",
+  "groupByRowFields": ["DepartmentName", "DishCategory"],
+  "aggregateFields": ["UniqAmount.Profit", "DishDiscountSum"],
+  "filters": {
+    "DepartmentName": {
+      "filterType": "IncludeValues",
+      "values": ["Кухня", "Бар"]
+    },
+    "OpenDate.Typed": {
+      "filterType": "DateRange",
+      "from": "2024-01-01",
+      "to": "2024-01-31",
+      "includeHigh": true,
+      "includeLow": true,
+      "periodType": "CUSTOM"
+    }
+  }
+}
+```
+
+**Использование:**
+
+Этот endpoint полезен для:
+
+- Отладки запросов к iiko API
+- Создания документации
+- Генерации примеров запросов
+- Интеграции с другими системами
+
+**Ошибки:**
+
+Аналогичны endpoint `/olap`.
+
 ## Архитектура
 
 ```
@@ -186,10 +282,14 @@ air -c api.air.toml
 ├── cmd/api/              # Entry point
 ├── internal/
 │   ├── api/              # API слой
+│   │   ├── common/       # Общие структуры (OlapBody)
 │   │   ├── routes/       # Роуты
 │   │   │   ├── dashboard/
+│   │   │   │   ├── static/js/  # JavaScript модули
+│   │   │   │   └── templates/  # HTML шаблоны
 │   │   │   ├── fields/
-│   │   │   └── olap/
+│   │   │   ├── olap/
+│   │   │   └── olap_body/
 │   │   └── utils/        # Утилиты (validator, handler)
 │   ├── cache/            # Кэширование с сжатием
 │   └── iiko/             # Интеграция с iiko API
@@ -275,6 +375,43 @@ curl -X POST http://localhost:8080/olap \
   }'
 ```
 
+### Конструирование JSON запроса
+
+```bash
+curl -X POST http://localhost:8080/olap-body \
+  -H "Content-Type: application/json" \
+  -d '{
+    "baseURL": "https://demo.iiko.ru",
+    "user": "user",
+    "passwordHash": "hash",
+    "reportType": "SALES",
+    "groupByRowFields": ["DepartmentName"],
+    "aggregateFields": ["UniqAmount.Profit"],
+    "from": "2024-01-01",
+    "to": "2024-01-31"
+  }'
+```
+
+**Ответ:**
+
+```json
+{
+  "reportType": "SALES",
+  "groupByRowFields": ["DepartmentName"],
+  "aggregateFields": ["UniqAmount.Profit"],
+  "filters": {
+    "OpenDate.Typed": {
+      "filterType": "DateRange",
+      "from": "2024-01-01",
+      "to": "2024-01-31",
+      "includeHigh": true,
+      "includeLow": true,
+      "periodType": "CUSTOM"
+    }
+  }
+}
+```
+
 ## Разработка
 
 ### Структура хэндлера
@@ -300,8 +437,12 @@ handlers := []utils.HandlerInterface{
     dashboard.NewDashboardHandler(),
     olap.NewOlapHandler(),
     fields.NewFieldsHandler(),
+    olapbody.NewOlapBodyHandler(),
     // Ваш новый хэндлер
 }
+
+// Добавьте статические хендлеры для dashboard
+handlers = append(handlers, dashboard.GetStaticHandlers()...)
 ```
 
 ## Лицензия

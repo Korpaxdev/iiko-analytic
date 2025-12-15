@@ -140,23 +140,7 @@ func (s *ServerAPI) getCacheKey(params dto.OlapParams) string {
 	return fmt.Sprintf("olap:%x", hash)
 }
 
-func (s *ServerAPI) Olap(params dto.OlapParams) (dto.OlapResponse, error) {
-
-	var dto = dto.OlapResponse{}
-
-	if s.cache != nil {
-		cacheKey := s.getCacheKey(params)
-		err := s.cache.Get(cacheKey, &dto)
-		if err == nil {
-			return dto, nil
-		}
-		logger.Printf("Error getting cache: %v\n", err)
-	}
-
-	if err := s.Login(); err != nil {
-		return dto, err
-	}
-
+func (s *ServerAPI) OlapBody(params dto.OlapParams) map[string]any {
 	bodyGroupByRowFields := lo.Map(params.GroupByRowFields,
 		func(groupField utils.GroupField, _ int) string {
 			return string(groupField)
@@ -177,7 +161,27 @@ func (s *ServerAPI) Olap(params dto.OlapParams) (dto.OlapResponse, error) {
 		"aggregateFields":  bodyAggregateFields,
 		"filters":          bodyFilters,
 	}
+	return body
+}
 
+func (s *ServerAPI) Olap(params dto.OlapParams) (dto.OlapResponse, error) {
+
+	var dto = dto.OlapResponse{}
+
+	if s.cache != nil {
+		cacheKey := s.getCacheKey(params)
+		err := s.cache.Get(cacheKey, &dto)
+		if err == nil {
+			return dto, nil
+		}
+		logger.Printf("Error getting cache: %v\n", err)
+	}
+
+	if err := s.Login(); err != nil {
+		return dto, err
+	}
+
+	body := s.OlapBody(params)
 	response, err := s.client.R().
 		SetBody(body).
 		SetQueryParam("key", s.token).
