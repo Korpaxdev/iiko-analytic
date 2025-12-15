@@ -211,7 +211,7 @@
             <div>
               <label
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >Base URL <span class="text-red-500">*</span></label
+                >URL сервера <span class="text-red-500">*</span></label
               >
               <input
                 type="url"
@@ -224,27 +224,27 @@
             <div>
               <label
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >User <span class="text-red-500">*</span></label
+                >Пользователь <span class="text-red-500">*</span></label
               >
               <input
                 type="text"
                 id="user"
                 required
                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                placeholder="username"
+                placeholder="Имя пользователя"
               />
             </div>
             <div>
               <label
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >Password Hash <span class="text-red-500">*</span></label
+                >Хеш пароля <span class="text-red-500">*</span></label
               >
               <input
                 type="password"
                 id="passwordHash"
                 required
                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                placeholder="password hash"
+                placeholder="Хеш пароля"
               />
             </div>
           </div>
@@ -261,14 +261,14 @@
           <div class="mb-4">
             <label
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >Report Type</label
+              >Тип отчета</label
             >
             <select
               id="reportType"
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             >
-              <option value="SALES">SALES</option>
-              <option value="TRANSACTIONS">TRANSACTIONS</option>
+              <option value="SALES">Продажи (SALES)</option>
+              <option value="TRANSACTIONS">Транзакции (TRANSACTIONS)</option>
             </select>
           </div>
 
@@ -289,7 +289,7 @@
           <div class="mb-4">
             <label
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >From Date <span class="text-red-500">*</span></label
+              >Дата начала <span class="text-red-500">*</span></label
             >
             <input
               type="date"
@@ -302,7 +302,7 @@
           <div class="mb-4">
             <label
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >To Date <span class="text-red-500">*</span></label
+              >Дата окончания <span class="text-red-500">*</span></label
             >
             <input
               type="date"
@@ -324,7 +324,7 @@
           <div class="mb-4">
             <label
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >Group By Row Fields</label
+              >Группировка по строкам</label
             >
             <div
               id="groupByRowFieldsContainer"
@@ -361,7 +361,7 @@
           <div class="mb-4">
             <label
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >Group By Col Fields</label
+              >Группировка по столбцам</label
             >
             <div
               id="groupByColFieldsContainer"
@@ -398,7 +398,7 @@
           <div class="mb-4">
             <label
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >Aggregate Fields</label
+              >Поля агрегации</label
             >
             <div
               id="aggregateFieldsContainer"
