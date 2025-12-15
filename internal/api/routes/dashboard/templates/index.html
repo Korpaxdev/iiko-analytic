@@ -147,19 +147,66 @@
       .dark .json-syntax .json-null {
         color: #569cd6;
       }
+
+      /* Scroll to top button */
+      #scrollToTopBtn {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        width: 3.5rem;
+        height: 3.5rem;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        transition: all 0.3s ease;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        visibility: hidden;
+        transform: scale(0.8);
+      }
+
+      #scrollToTopBtn.show {
+        opacity: 1;
+        visibility: visible;
+        transform: scale(1);
+      }
+
+      #scrollToTopBtn:hover {
+        transform: translateY(-4px) scale(1.05);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+      }
+
+      #scrollToTopBtn:active {
+        transform: translateY(-2px) scale(0.98);
+      }
+
+      .dark #scrollToTopBtn {
+        background: linear-gradient(135deg, #4c51bf 0%, #6b46c1 100%);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      }
+
+      .dark #scrollToTopBtn:hover {
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+      }
     </style>
   </head>
   <body
     class="bg-gray-100 dark:bg-gray-900 min-h-screen p-8 transition-colors duration-200"
   >
     <div class="max-w-7xl mx-auto">
-      <div class="flex justify-between items-center mb-8">
+      <div class="relative flex justify-center items-center mb-8">
         <h1 class="text-4xl font-bold text-gray-800 dark:text-gray-100">
           IIKO Аналитика
         </h1>
         <button
           onclick="toggleTheme()"
-          class="p-3 rounded-lg bg-white dark:bg-gray-800 shadow-md hover:shadow-lg transition-all duration-200"
+          class="absolute right-0 p-3 rounded-lg bg-white dark:bg-gray-800 shadow-md hover:shadow-lg transition-all duration-200"
           title="Переключить тему"
         >
           <svg
@@ -600,5 +647,58 @@
         </div>
       </div>
     </div>
+
+    <!-- Scroll to top button -->
+    <button
+      id="scrollToTopBtn"
+      onclick="scrollToTop()"
+      title="Наверх"
+      aria-label="Прокрутить наверх"
+    >
+      <svg
+        class="w-6 h-6"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2.5"
+          d="M5 10l7-7m0 0l7 7m-7-7v18"
+        />
+      </svg>
+    </button>
+
+    <script>
+      // Scroll to top functionality
+      const scrollToTopBtn = document.getElementById("scrollToTopBtn");
+      const executeButtonsBlock = document.querySelector(
+        ".bg-white.dark\\:bg-gray-800.rounded-lg.shadow-md.p-6.mb-6"
+      );
+
+      function scrollToTop() {
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth",
+        });
+      }
+
+      function checkScroll() {
+        if (executeButtonsBlock) {
+          const rect = executeButtonsBlock.getBoundingClientRect();
+          const isScrolledPast = rect.bottom < 0;
+
+          if (isScrolledPast) {
+            scrollToTopBtn.classList.add("show");
+          } else {
+            scrollToTopBtn.classList.remove("show");
+          }
+        }
+      }
+
+      window.addEventListener("scroll", checkScroll);
+      window.addEventListener("load", checkScroll);
+    </script>
   </body>
 </html>
