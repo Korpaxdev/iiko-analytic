@@ -24,6 +24,9 @@ var fieldsJS string
 //go:embed static/js/filters.js
 var filtersJS string
 
+//go:embed static/js/clear-fields.js
+var clearFieldsJS string
+
 //go:embed static/js/query.js
 var queryJS string
 
@@ -36,6 +39,7 @@ var (
 	utilsJSETag         string
 	fieldsJSETag        string
 	filtersJSETag       string
+	clearFieldsJSETag   string
 	queryJSETag         string
 	jsonHighlightJSETag string
 )
@@ -52,6 +56,7 @@ func init() {
 	utilsJSETag = generateETag(utilsJS)
 	fieldsJSETag = generateETag(fieldsJS)
 	filtersJSETag = generateETag(filtersJS)
+	clearFieldsJSETag = generateETag(clearFieldsJS)
 	queryJSETag = generateETag(queryJS)
 	jsonHighlightJSETag = generateETag(jsonHighlightJS)
 }
@@ -85,6 +90,7 @@ func GetStaticHandlers() []utils.HandlerInterface {
 		NewStaticHandler("/static/js/utils.js", utilsJS, utilsJSETag),
 		NewStaticHandler("/static/js/fields.js", fieldsJS, fieldsJSETag),
 		NewStaticHandler("/static/js/filters.js", filtersJS, filtersJSETag),
+		NewStaticHandler("/static/js/clear-fields.js", clearFieldsJS, clearFieldsJSETag),
 		NewStaticHandler("/static/js/query.js", queryJS, queryJSETag),
 		NewStaticHandler("/static/js/json-highlight.js", jsonHighlightJS, jsonHighlightJSETag),
 	}

@@ -70,7 +70,7 @@ func (s *ServerAPI) Logout() error {
 
 	response, err := s.client.R().
 		SetQueryParam("key", s.token).
-		Post(routes.LogoOutRoute)
+		Get(routes.LogoOutRoute)
 
 	if err = utils.HandleWithoutDto(response, err); err != nil {
 		return err

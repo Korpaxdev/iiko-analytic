@@ -254,8 +254,6 @@ function applyPreset() {
   const preset = window.presets.find((p) => p.id === presetId);
   if (!preset) return;
 
-  console.log("Applying preset:", preset);
-
   // 1. Устанавливаем reportType
   if (preset.reportType) {
     document.getElementById("reportType").value = preset.reportType;
@@ -274,7 +272,7 @@ function applyPreset() {
   renderAggregateFields();
 
   // 5. Заполняем фильтры (только IncludeValues и ExcludeValues)
-  clearAllFilters();
+  clearOlapFilters();
   if (preset.filters) {
     Object.entries(preset.filters).forEach(([fieldName, filter]) => {
       if (
@@ -287,8 +285,8 @@ function applyPreset() {
   }
 }
 
-// Очистить все фильтры
-function clearAllFilters() {
+// Очистить все OLAP фильтры
+function clearOlapFilters() {
   const filtersList = document.getElementById("filtersList");
   filtersList.innerHTML = "";
   window.filterAutocompleteIndex = {};
