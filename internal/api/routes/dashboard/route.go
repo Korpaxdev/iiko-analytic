@@ -36,6 +36,9 @@ var jsonHighlightJS string
 //go:embed static/js/import.js
 var importJS string
 
+//go:embed static/js/hash.js
+var hashJS string
+
 //go:embed static/favicon.svg
 var faviconSVG string
 
@@ -49,6 +52,7 @@ var (
 	queryJSETag         string
 	jsonHighlightJSETag string
 	importJSETag        string
+	hashJSETag          string
 	faviconSVGETag      string
 )
 
@@ -68,6 +72,7 @@ func init() {
 	queryJSETag = generateETag(queryJS)
 	jsonHighlightJSETag = generateETag(jsonHighlightJS)
 	importJSETag = generateETag(importJS)
+	hashJSETag = generateETag(hashJS)
 	faviconSVGETag = generateETag(faviconSVG)
 }
 
@@ -118,6 +123,7 @@ func GetStaticHandlers() []utils.HandlerInterface {
 		NewStaticHandler("/static/js/query.js", queryJS, queryJSETag),
 		NewStaticHandler("/static/js/json-highlight.js", jsonHighlightJS, jsonHighlightJSETag),
 		NewStaticHandler("/static/js/import.js", importJS, importJSETag),
+		NewStaticHandler("/static/js/hash.js", hashJS, hashJSETag),
 		NewFaviconHandler("/favicon.svg", faviconSVG, faviconSVGETag),
 	}
 }

@@ -14,6 +14,8 @@
     </script>
     <!-- SheetJS library for Excel export -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <!-- CryptoJS library for SHA-1 hashing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
     <!-- JavaScript modules -->
     <script src="/static/js/utils.js" defer></script>
     <script src="/static/js/fields.js" defer></script>
@@ -22,6 +24,7 @@
     <script src="/static/js/query.js" defer></script>
     <script src="/static/js/json-highlight.js" defer></script>
     <script src="/static/js/import.js" defer></script>
+    <script src="/static/js/hash.js" defer></script>
     <script src="/static/js/main.js" defer></script>
     <style>
       /* Prevent layout shift when scrollbar appears */
@@ -293,8 +296,27 @@
               <label
                 for="passwordHash"
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >Хеш пароля <span class="text-red-500">*</span></label
-              >
+                >Хеш пароля <span class="text-red-500">*</span>
+                <button
+                  type="button"
+                  onclick="openHashModal()"
+                  class="ml-2 inline-flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 bg-transparent border-none p-1 cursor-pointer transition-colors"
+                  title="Получить хэш"
+                >
+                  <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                    />
+                  </svg></button
+              ></label>
               <input
                 type="password"
                 id="passwordHash"
@@ -686,6 +708,103 @@
               class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
             ></tbody>
           </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hash Password Modal -->
+    <div
+      id="hashModal"
+      class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+      onclick="closeHashModalOnBackdrop(event)"
+    >
+      <div
+        class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full"
+        onclick="event.stopPropagation()"
+      >
+        <div
+          class="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700"
+        >
+          <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-200">
+            Получить хэш пароля
+          </h3>
+          <button
+            onclick="closeHashModal()"
+            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            title="Закрыть"
+          >
+            <svg
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+        <div class="p-6">
+          <label
+            for="passwordInput"
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >Пароль</label
+          >
+          <input
+            type="password"
+            id="passwordInput"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 mb-4"
+            placeholder="Введите пароль"
+            onkeypress="if(event.key === 'Enter') generateHash()"
+          />
+          <div id="hashResultContainer" class="hidden mb-4">
+            <label
+              for="hashOutput"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >Хэш пароля</label
+            >
+            <div class="flex gap-2">
+              <input
+                type="text"
+                id="hashOutput"
+                readonly
+                class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-mono text-sm"
+              />
+              <button
+                onclick="copyHash(this)"
+                class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md transition duration-200 text-sm"
+                title="Копировать хэш"
+              >
+                Копировать
+              </button>
+            </div>
+          </div>
+          <div
+            id="hashError"
+            class="hidden mt-3 bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-200 px-4 py-3 rounded-md text-sm"
+          >
+            <p id="hashErrorMessage"></p>
+          </div>
+        </div>
+        <div
+          class="flex justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700"
+        >
+          <button
+            onclick="closeHashModal()"
+            class="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-md transition duration-200"
+          >
+            Отмена
+          </button>
+          <button
+            onclick="generateHash()"
+            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition duration-200"
+          >
+            Получить хэш
+          </button>
         </div>
       </div>
     </div>
