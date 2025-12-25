@@ -33,6 +33,12 @@ var queryJS string
 //go:embed static/js/json-highlight.js
 var jsonHighlightJS string
 
+//go:embed static/js/import.js
+var importJS string
+
+//go:embed static/favicon.svg
+var faviconSVG string
+
 var (
 	htmlETag            string
 	mainJSETag          string
@@ -42,6 +48,8 @@ var (
 	clearFieldsJSETag   string
 	queryJSETag         string
 	jsonHighlightJSETag string
+	importJSETag        string
+	faviconSVGETag      string
 )
 
 const (
@@ -59,6 +67,8 @@ func init() {
 	clearFieldsJSETag = generateETag(clearFieldsJS)
 	queryJSETag = generateETag(queryJS)
 	jsonHighlightJSETag = generateETag(jsonHighlightJS)
+	importJSETag = generateETag(importJS)
+	faviconSVGETag = generateETag(faviconSVG)
 }
 
 func generateETag(content string) string {
@@ -84,6 +94,20 @@ func NewStaticHandler(path, content, etag string) utils.HandlerInterface {
 	})
 }
 
+func NewFaviconHandler(path, content, etag string) utils.HandlerInterface {
+	return utils.NewHandler(fiber.MethodGet, path, func(c *fiber.Ctx) error {
+		if c.Get("If-None-Match") == etag {
+			return c.SendStatus(fiber.StatusNotModified)
+		}
+
+		c.Set("Cache-Control", "public, max-age=31536000, immutable") // 1 год для статики
+		c.Set("ETag", etag)
+		c.Set("Content-Type", "image/svg+xml")
+
+		return c.SendString(content)
+	})
+}
+
 func GetStaticHandlers() []utils.HandlerInterface {
 	return []utils.HandlerInterface{
 		NewStaticHandler("/static/js/main.js", mainJS, mainJSETag),
@@ -93,6 +117,8 @@ func GetStaticHandlers() []utils.HandlerInterface {
 		NewStaticHandler("/static/js/clear-fields.js", clearFieldsJS, clearFieldsJSETag),
 		NewStaticHandler("/static/js/query.js", queryJS, queryJSETag),
 		NewStaticHandler("/static/js/json-highlight.js", jsonHighlightJS, jsonHighlightJSETag),
+		NewStaticHandler("/static/js/import.js", importJS, importJSETag),
+		NewFaviconHandler("/favicon.svg", faviconSVG, faviconSVGETag),
 	}
 }
 

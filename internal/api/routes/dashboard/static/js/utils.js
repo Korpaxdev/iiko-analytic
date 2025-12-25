@@ -48,6 +48,17 @@ function hideError() {
 function showError(message) {
   document.getElementById("errorMessage").textContent = message;
   document.getElementById("error").classList.remove("hidden");
+  hideSuccess(); // Скрываем успешное сообщение при показе ошибки
+}
+
+function hideSuccess() {
+  document.getElementById("success").classList.add("hidden");
+}
+
+function showSuccess(message) {
+  document.getElementById("successMessage").textContent = message;
+  document.getElementById("success").classList.remove("hidden");
+  hideError(); // Скрываем ошибку при показе успешного сообщения
 }
 
 function hideResults() {
