@@ -163,7 +163,8 @@ function getFilters() {
       .querySelector(".filter-values")
       .value.split(",")
       .map((v) => v.trim())
-      .filter((v) => v);
+      .filter((v) => v)
+      .map((v) => (v.toLowerCase() === "null" ? null : v));
 
     if (field && values.length > 0) {
       filters[field] = {

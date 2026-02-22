@@ -11,7 +11,7 @@ import (
 
 type Filter struct {
 	FilterType dto.FilterType `json:"filterType" validate:"required,oneof=IncludeValues ExcludeValues"`
-	Values     []string       `json:"values" validate:"required"`
+	Values     []*string      `json:"values" validate:"required"`
 }
 
 type OlapConnectionBody struct {

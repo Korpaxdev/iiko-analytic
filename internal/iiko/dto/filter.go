@@ -9,5 +9,5 @@ const (
 
 type Filter struct {
 	FilterType FilterType `json:"filterType"`
-	Values     []string   `json:"values"`
+	Values     []*string  `json:"values"`
 }

@@ -315,7 +315,7 @@ function addFilterFromPreset(fieldName, filterType, values) {
           filterType === "ExcludeValues" ? "selected" : ""
         }>Exclude Values</option>
       </select>
-      <input type="text" placeholder="Values (comma separated)" value="${values.join(
+      <input type="text" placeholder="Values (comma separated)" value="${values.map((v) => v === null ? "null" : v).join(
         ", "
       )}" class="filter-values w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm mb-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
       <button onclick="removeFilter(${filterId})" class="w-full bg-red-500 hover:bg-red-600 text-white text-sm py-1 px-2 rounded">

@@ -109,8 +109,8 @@ function validateJsonFormat(json) {
         return `Фильтр для поля '${fieldName}' должен содержать массив values`;
       }
 
-      if (!filter.values.every((item) => typeof item === "string")) {
-        return `Все значения в фильтре для поля '${fieldName}' должны быть строками`;
+      if (!filter.values.every((item) => item === null || typeof item === "string")) {
+        return `Все значения в фильтре для поля '${fieldName}' должны быть строками или null`;
       }
     }
   }
