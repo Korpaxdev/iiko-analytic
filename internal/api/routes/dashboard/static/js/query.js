@@ -9,9 +9,12 @@ window.columnFilters = {}; // { columnKey: [selectedValues] }
 window.openFilterDropdown = null; // Текущий открытый dropdown
 
 async function executeQuery() {
-  const baseURL = document.getElementById("baseURL").value;
-  const user = document.getElementById("user").value;
-  const passwordHash = document.getElementById("passwordHash").value;
+  const server = getSelectedServer();
+  if (!server) {
+    showError("Выберите сервер");
+    return;
+  }
+  const { baseURL, user, passwordHash } = server;
   const reportType = document.getElementById("reportType").value;
   const from = document.getElementById("fromDate").value;
   const to = document.getElementById("toDate").value;
@@ -20,7 +23,7 @@ async function executeQuery() {
   const aggregateFields = window.selectedAggregateFields;
   const filters = getFilters();
 
-  if (!baseURL || !user || !passwordHash || !from || !to) {
+  if (!from || !to) {
     showError("Заполните все обязательные поля");
     return;
   }
@@ -696,9 +699,12 @@ function exportToExcel() {
 }
 
 async function constructQuery() {
-  const baseURL = document.getElementById("baseURL").value;
-  const user = document.getElementById("user").value;
-  const passwordHash = document.getElementById("passwordHash").value;
+  const server = getSelectedServer();
+  if (!server) {
+    showError("Выберите сервер");
+    return;
+  }
+  const { baseURL, user, passwordHash } = server;
   const reportType = document.getElementById("reportType").value;
   const from = document.getElementById("fromDate").value;
   const to = document.getElementById("toDate").value;
@@ -707,7 +713,7 @@ async function constructQuery() {
   const aggregateFields = window.selectedAggregateFields;
   const filters = getFilters();
 
-  if (!baseURL || !user || !passwordHash || !from || !to) {
+  if (!from || !to) {
     showError("Заполните все обязательные поля");
     return;
   }

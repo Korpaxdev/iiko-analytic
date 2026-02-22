@@ -20,6 +20,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <!-- JavaScript modules -->
     <script src="/static/js/utils.js" defer></script>
+    <script src="/static/js/servers.js" defer></script>
     <script src="/static/js/fields.js" defer></script>
     <script src="/static/js/filters.js" defer></script>
     <script src="/static/js/clear-fields.js" defer></script>
@@ -254,82 +255,83 @@
         <div
           class="lg:col-span-3 bg-white dark:bg-gray-800 rounded-lg shadow-md p-6"
         >
-          <div class="flex justify-between items-center mb-4">
-            <h2 class="text-2xl font-semibold text-gray-700 dark:text-gray-200">
-              Настройки подключения
-            </h2>
-            <button
-              onclick="clearConnectionSettings()"
-              class="text-sm text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 underline"
-              title="Очистить сохраненные данные"
+          <h2
+            class="text-2xl font-semibold text-gray-700 dark:text-gray-200 mb-4"
+          >
+            Настройки подключения
+          </h2>
+          <div class="flex items-center gap-2">
+            <select
+              id="serverSelector"
+              onchange="onServerChange()"
+              class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             >
-              Очистить
+              <option value="">Выберите сервер...</option>
+            </select>
+            <button
+              type="button"
+              onclick="openServerModal()"
+              class="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition duration-200 text-sm font-medium"
+              title="Добавить сервер"
+            >
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
             </button>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label
-                for="baseURL"
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >URL сервера <span class="text-red-500">*</span></label
+            <button
+              type="button"
+              id="editServerBtn"
+              onclick="openServerModal(getSelectedServerId())"
+              disabled
+              class="px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-md transition duration-200 text-sm font-medium"
+              title="Редактировать сервер"
+            >
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-              <input
-                type="url"
-                id="baseURL"
-                required
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                placeholder="https://api.example.com"
-              />
-            </div>
-            <div>
-              <label
-                for="user"
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >Пользователь <span class="text-red-500">*</span></label
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                />
+              </svg>
+            </button>
+            <button
+              type="button"
+              id="deleteServerBtn"
+              onclick="deleteServer(getSelectedServerId())"
+              disabled
+              class="px-3 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-md transition duration-200 text-sm font-medium"
+              title="Удалить сервер"
+            >
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-              <input
-                type="text"
-                id="user"
-                required
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                placeholder="Имя пользователя"
-              />
-            </div>
-            <div>
-              <label
-                for="passwordHash"
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >Хеш пароля <span class="text-red-500">*</span>
-                <button
-                  type="button"
-                  onclick="openHashModal()"
-                  class="ml-2 inline-flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 bg-transparent border-none p-1 cursor-pointer transition-colors text-sm"
-                  title="Получить хэш"
-                >
-                  <svg
-                    class="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
-                    />
-                  </svg>
-                  <span>получить хэш</span>
-                </button></label
-              >
-              <input
-                type="password"
-                id="passwordHash"
-                required
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                placeholder="Хеш пароля"
-              />
-            </div>
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
+            </button>
           </div>
         </div>
 
@@ -924,7 +926,7 @@
       onclick="closeChartModalOnBackdrop(event)"
     >
       <div
-        class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col"
+        class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] flex flex-col"
         onclick="event.stopPropagation()"
       >
         <div
@@ -953,7 +955,7 @@
             </svg>
           </button>
         </div>
-        <div class="p-6 flex-1 overflow-y-auto custom-scrollbar">
+        <div class="p-6 flex-1 overflow-visible">
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <!-- X Axis -->
             <div class="relative">
@@ -1033,6 +1035,126 @@
             class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-md transition duration-200"
           >
             Построить
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Server Modal -->
+    <div
+      id="serverModal"
+      class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      onclick="closeServerModalOnBackdrop(event)"
+    >
+      <div
+        class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md mx-4"
+      >
+        <h3
+          id="serverModalTitle"
+          class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4"
+        >
+          Добавить сервер
+        </h3>
+
+        <!-- Error -->
+        <div
+          id="serverModalError"
+          class="hidden mb-4 p-3 bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-200 rounded-md text-sm"
+        >
+          <span id="serverModalErrorMessage"></span>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <label
+              for="serverName"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >Название</label
+            >
+            <input
+              type="text"
+              id="serverName"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              placeholder="Мой ресторан"
+            />
+          </div>
+          <div>
+            <label
+              for="serverURL"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >URL сервера <span class="text-red-500">*</span></label
+            >
+            <input
+              type="url"
+              id="serverURL"
+              required
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              placeholder="https://example.iiko.it/resto/api/v2"
+            />
+          </div>
+          <div>
+            <label
+              for="serverUser"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >Пользователь <span class="text-red-500">*</span></label
+            >
+            <input
+              type="text"
+              id="serverUser"
+              required
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              placeholder="Имя пользователя"
+            />
+          </div>
+          <div>
+            <label
+              for="serverPasswordHash"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >Хеш пароля <span class="text-red-500">*</span>
+              <button
+                type="button"
+                onclick="openHashModal()"
+                class="ml-2 inline-flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 bg-transparent border-none p-1 cursor-pointer transition-colors text-sm"
+                title="Получить хэш"
+              >
+                <svg
+                  class="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                  />
+                </svg>
+                <span>получить хэш</span>
+              </button></label
+            >
+            <input
+              type="password"
+              id="serverPasswordHash"
+              required
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              placeholder="Хеш пароля"
+            />
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-3 mt-6">
+          <button
+            onclick="closeServerModal()"
+            class="px-4 py-2 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-200 rounded-md transition duration-200"
+          >
+            Отмена
+          </button>
+          <button
+            onclick="saveServerFromModal()"
+            class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition duration-200"
+          >
+            Сохранить
           </button>
         </div>
       </div>

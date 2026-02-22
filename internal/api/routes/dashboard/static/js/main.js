@@ -19,9 +19,6 @@ window.autocompleteIndex = {
 };
 window.filterAutocompleteIndex = {};
 
-// Создаем debounced версию функции загрузки полей
-const debouncedCheckAndLoadFields = debounce(checkAndLoadFields, 500);
-
 // Инициализация при загрузке DOM
 document.addEventListener("DOMContentLoaded", () => {
   const today = new Date();
@@ -124,45 +121,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Report Type change handler
   document.getElementById("reportType").addEventListener("change", () => {
-    saveConnectionSettings();
     checkAndLoadFields();
     updatePresetsSelect();
   });
 
-  // Connection settings change handlers with debounce
-  document.getElementById("baseURL").addEventListener("input", () => {
-    saveConnectionSettings();
-    debouncedCheckAndLoadFields();
-    debouncedCheckAndLoadPresets();
-  });
-
-  document.getElementById("user").addEventListener("input", () => {
-    saveConnectionSettings();
-    debouncedCheckAndLoadFields();
-    debouncedCheckAndLoadPresets();
-  });
-
-  document.getElementById("passwordHash").addEventListener("input", () => {
-    saveConnectionSettings();
-    debouncedCheckAndLoadFields();
-    debouncedCheckAndLoadPresets();
-  });
-
-  // Загружаем сохраненные настройки и автоматически проверяем поля
-  loadConnectionSettings();
+  // Инициализируем серверы и загружаем данные для выбранного
+  initServers();
   checkAndLoadFields();
   checkAndLoadPresets();
 });
 
 // Загрузка пресетов
 async function loadPresets() {
-  const baseURL = document.getElementById("baseURL").value;
-  const user = document.getElementById("user").value;
-  const passwordHash = document.getElementById("passwordHash").value;
-
-  if (!baseURL || !user || !passwordHash) {
-    return;
-  }
+  const server = getSelectedServer();
+  if (!server) return;
+  const { baseURL, user, passwordHash } = server;
 
   window.presetsLoading = true;
   updatePresetsSelect();
@@ -191,17 +164,11 @@ async function loadPresets() {
 }
 
 function checkAndLoadPresets() {
-  const baseURL = document.getElementById("baseURL").value;
-  const user = document.getElementById("user").value;
-  const passwordHash = document.getElementById("passwordHash").value;
-
-  if (baseURL && user && passwordHash && window.presets === null) {
+  const server = getSelectedServer();
+  if (server && window.presets === null) {
     loadPresets();
   }
 }
-
-// Создаем debounced версию функции загрузки пресетов
-const debouncedCheckAndLoadPresets = debounce(checkAndLoadPresets, 500);
 
 // Обновление select с пресетами
 function updatePresetsSelect() {

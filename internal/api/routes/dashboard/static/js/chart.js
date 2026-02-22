@@ -331,6 +331,17 @@ function renderChart() {
       },
     };
   } else {
+    // Определяем нужна ли вторая ось (если масштабы отличаются > 10x)
+    const useMultiAxis = _selectedYFields.length > 1 && (() => {
+      const maxValues = _selectedYFields.map((col) => {
+        const vals = displayData.map((row) => Math.abs(parseFloat(row[col.key]) || 0)).filter((v) => v > 0);
+        return vals.length > 0 ? Math.max(...vals) : 0;
+      });
+      const minMax = Math.min(...maxValues.filter((v) => v > 0));
+      const maxMax = Math.max(...maxValues);
+      return minMax > 0 && maxMax / minMax > 10;
+    })();
+
     const datasets = _selectedYFields.map((col, idx) => ({
       label: col.name,
       data: displayData.map((row) => parseFloat(row[col.key]) || 0),
@@ -339,7 +350,27 @@ function renderChart() {
       borderWidth: chartType === "line" ? 2 : 1,
       tension: chartType === "line" ? 0.3 : 0,
       fill: false,
+      yAxisID: useMultiAxis && idx > 0 ? "y1" : "y",
     }));
+
+    const scales = {
+      x: { ticks: { color: textColor, maxRotation: 45 }, grid: { color: gridColor } },
+      y: {
+        type: "linear",
+        position: "left",
+        ticks: { color: textColor },
+        grid: { color: gridColor },
+      },
+    };
+
+    if (useMultiAxis) {
+      scales.y1 = {
+        type: "linear",
+        position: "right",
+        ticks: { color: _chartColorsBorder[1 % _chartColorsBorder.length] },
+        grid: { drawOnChartArea: false },
+      };
+    }
 
     chartConfig = {
       type: chartType,
@@ -347,10 +378,7 @@ function renderChart() {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        scales: {
-          x: { ticks: { color: textColor, maxRotation: 45 }, grid: { color: gridColor } },
-          y: { ticks: { color: textColor }, grid: { color: gridColor } },
-        },
+        scales,
         plugins: {
           legend: { labels: { color: textColor } },
           title: {

@@ -6,32 +6,22 @@ function getCurrentFields() {
 }
 
 function checkAndLoadFields() {
-  const baseURL = document.getElementById("baseURL").value;
-  const user = document.getElementById("user").value;
-  const passwordHash = document.getElementById("passwordHash").value;
+  const server = getSelectedServer();
   const reportType = document.getElementById("reportType").value;
 
-  // Загружаем поля только если все данные подключения заполнены и поля еще не загружены
-  if (
-    baseURL &&
-    user &&
-    passwordHash &&
-    window.availableFieldsByReportType[reportType] === null
-  ) {
+  if (server && window.availableFieldsByReportType[reportType] === null) {
     loadFields();
   }
 }
 
 async function loadFields() {
-  const baseURL = document.getElementById("baseURL").value;
-  const user = document.getElementById("user").value;
-  const passwordHash = document.getElementById("passwordHash").value;
-  const reportType = document.getElementById("reportType").value;
-
-  if (!baseURL || !user || !passwordHash) {
-    showError("Заполните все поля подключения");
+  const server = getSelectedServer();
+  if (!server) {
+    showError("Выберите сервер");
     return;
   }
+  const { baseURL, user, passwordHash } = server;
+  const reportType = document.getElementById("reportType").value;
 
   showLoading(true);
   hideError();
