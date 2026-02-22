@@ -182,6 +182,7 @@ function openChartModal() {
 
   const modal = document.getElementById("chartModal");
   modal.classList.remove("hidden");
+  document.body.classList.add("overflow-hidden");
 
   // Сброс состояния
   _selectedYFields = [];
@@ -244,6 +245,7 @@ function openChartModal() {
 
 function closeChartModal() {
   document.getElementById("chartModal").classList.add("hidden");
+  document.body.classList.remove("overflow-hidden");
 }
 
 function closeChartModalOnBackdrop(event) {

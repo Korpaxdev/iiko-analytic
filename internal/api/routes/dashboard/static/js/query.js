@@ -226,10 +226,10 @@ function sortTable(columnKey) {
     let bVal = b[columnKey];
 
     // Пытаемся преобразовать в числа для корректной сортировки
-    const aNum = parseFloat(aVal);
-    const bNum = parseFloat(bVal);
+    const aNum = Number(aVal);
+    const bNum = Number(bVal);
 
-    if (!isNaN(aNum) && !isNaN(bNum)) {
+    if (!isNaN(aNum) && !isNaN(bNum) && aVal !== "" && bVal !== "") {
       // Числовая сортировка
       return window.currentSortDirection === "asc" ? aNum - bNum : bNum - aNum;
     } else {
@@ -250,8 +250,8 @@ function sortTable(columnKey) {
 }
 
 function isColumnFilterable(columnKey, fieldType) {
-  // Не фильтруем только NUMBER и DATE типы
-  if (fieldType && (fieldType === "NUMBER" || fieldType === "DATE")) {
+  // Не фильтруем только NUMBER типы
+  if (fieldType && fieldType === "NUMBER") {
     return false;
   }
 
@@ -267,17 +267,6 @@ function isColumnFilterable(columnKey, fieldType) {
 
   // Если похоже на число (все символы - цифры, точки и запятые)
   if (/^[\d.,\s]+$/.test(strValue.trim()) && !isNaN(parseFloat(strValue))) {
-    return false;
-  }
-
-  // Исключаем даты в различных форматах
-  const datePatterns = [
-    /^\d{4}-\d{2}-\d{2}/, // 2023-12-31
-    /^\d{2}\/\d{2}\/\d{4}/, // 31/12/2023
-    /^\d{2}\.\d{2}\.\d{4}/, // 31.12.2023
-  ];
-
-  if (datePatterns.some((pattern) => pattern.test(strValue))) {
     return false;
   }
 

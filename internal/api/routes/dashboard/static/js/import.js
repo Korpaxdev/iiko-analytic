@@ -6,6 +6,7 @@ function openImportModal() {
   const errorDiv = document.getElementById("importError");
 
   modal.classList.remove("hidden");
+  document.body.classList.add("overflow-hidden");
   textarea.value = "";
   errorDiv.classList.add("hidden");
 
@@ -18,6 +19,7 @@ function openImportModal() {
 function closeImportModal() {
   const modal = document.getElementById("importModal");
   modal.classList.add("hidden");
+  document.body.classList.remove("overflow-hidden");
 }
 
 function closeImportModalOnBackdrop(event) {

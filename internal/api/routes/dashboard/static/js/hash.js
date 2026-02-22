@@ -4,6 +4,7 @@ function openHashModal() {
   const modal = document.getElementById("hashModal");
   if (modal) {
     modal.classList.remove("hidden");
+    document.body.classList.add("overflow-hidden");
     const passwordInput = document.getElementById("passwordInput");
     if (passwordInput) {
       passwordInput.focus();
@@ -17,6 +18,7 @@ function closeHashModal() {
   const modal = document.getElementById("hashModal");
   if (modal) {
     modal.classList.add("hidden");
+    document.body.classList.remove("overflow-hidden");
     const passwordInput = document.getElementById("passwordInput");
     const hashResultContainer = document.getElementById("hashResultContainer");
     const hashOutput = document.getElementById("hashOutput");
