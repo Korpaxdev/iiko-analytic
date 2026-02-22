@@ -16,6 +16,8 @@
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <!-- CryptoJS library for SHA-1 hashing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+    <!-- Chart.js library for chart rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <!-- JavaScript modules -->
     <script src="/static/js/utils.js" defer></script>
     <script src="/static/js/fields.js" defer></script>
@@ -24,6 +26,7 @@
     <script src="/static/js/query.js" defer></script>
     <script src="/static/js/json-highlight.js" defer></script>
     <script src="/static/js/import.js" defer></script>
+    <script src="/static/js/chart.js" defer></script>
     <script src="/static/js/hash.js" defer></script>
     <script src="/static/js/main.js" defer></script>
     <style>
@@ -676,11 +679,33 @@
               Сбросить фильтры
             </button>
           </div>
-          <button
-            onclick="exportToExcel()"
-            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition duration-200 flex items-center gap-2"
-            title="Экспортировать в Excel"
-          >
+          <div class="flex items-center gap-2">
+            <button
+              id="openChartModalBtn"
+              onclick="openChartModal()"
+              class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-md transition duration-200 flex items-center gap-2"
+              title="Построить график"
+            >
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
+              </svg>
+              График
+            </button>
+            <button
+              onclick="exportToExcel()"
+              class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition duration-200 flex items-center gap-2"
+              title="Экспортировать в Excel"
+            >
             <svg
               class="w-5 h-5"
               fill="none"
@@ -695,7 +720,8 @@
               />
             </svg>
             Экспорт в Excel
-          </button>
+            </button>
+          </div>
         </div>
         <div class="overflow-x-auto">
           <table
@@ -886,6 +912,127 @@
             class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition duration-200"
           >
             Импортировать
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Modal -->
+    <div
+      id="chartModal"
+      class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+      onclick="closeChartModalOnBackdrop(event)"
+    >
+      <div
+        class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col"
+        onclick="event.stopPropagation()"
+      >
+        <div
+          class="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700"
+        >
+          <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-200">
+            Построить график
+          </h3>
+          <button
+            onclick="closeChartModal()"
+            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            title="Закрыть"
+          >
+            <svg
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+        <div class="p-6 flex-1 overflow-y-auto custom-scrollbar">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <!-- X Axis -->
+            <div class="relative">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Ось X
+              </label>
+              <input
+                type="text"
+                id="chartXFieldInput"
+                autocomplete="off"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
+                placeholder="Поиск поля..."
+                data-key=""
+              />
+              <div
+                id="chartXAutocomplete"
+                class="hidden absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-48 overflow-y-auto custom-scrollbar"
+              ></div>
+            </div>
+            <!-- Y Axis -->
+            <div class="relative">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Ось Y (числовые поля)
+              </label>
+              <input
+                type="text"
+                id="chartYFieldInput"
+                autocomplete="off"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
+                placeholder="Поиск поля..."
+              />
+              <div
+                id="chartYAutocomplete"
+                class="hidden absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-48 overflow-y-auto custom-scrollbar"
+              ></div>
+            </div>
+            <!-- Chart Type -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Тип графика
+              </label>
+              <select
+                id="chartType"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
+              >
+                <option value="bar">Столбчатая</option>
+                <option value="line">Линейная</option>
+                <option value="pie">Круговая</option>
+              </select>
+            </div>
+          </div>
+          <!-- Y fields tags -->
+          <div id="chartYFieldsContainer" class="flex flex-wrap gap-2 mb-4"></div>
+          <!-- Chart error -->
+          <div
+            id="chartError"
+            class="hidden mb-4 bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-200 px-4 py-3 rounded-md text-sm"
+          >
+            <p id="chartErrorMessage"></p>
+          </div>
+          <!-- Chart canvas -->
+          <div id="chartCanvasContainer" class="hidden" style="height: 400px;">
+            <canvas id="chartCanvas"></canvas>
+          </div>
+        </div>
+        <div
+          class="flex justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700"
+        >
+          <button
+            onclick="closeChartModal()"
+            class="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-md transition duration-200"
+          >
+            Закрыть
+          </button>
+          <button
+            onclick="renderChart()"
+            class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-md transition duration-200"
+          >
+            Построить
           </button>
         </div>
       </div>
