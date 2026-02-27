@@ -129,6 +129,7 @@ func (s *ServerAPI) getCacheKey(params dto.OlapParams) string {
 	slices.Sort(params.GroupByColFields)
 
 	keyData := map[string]any{
+		"baseURL":           s.baseURL,
 		"reportType":       string(params.ReportType),
 		"aggregateFields":  params.AggregateFields,
 		"groupByRowFields": params.GroupByRowFields,
