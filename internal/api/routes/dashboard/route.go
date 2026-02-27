@@ -4,6 +4,8 @@ import (
 	"crypto/sha256"
 	_ "embed"
 	"fmt"
+	"strings"
+
 	"iiko-analytic/internal/api/utils"
 
 	"github.com/gofiber/fiber/v2"
@@ -71,7 +73,6 @@ const (
 
 func init() {
 	// Генерируем ETag при запуске
-	htmlETag = generateETag(htmlPage)
 	mainJSETag = generateETag(mainJS)
 	utilsJSETag = generateETag(utilsJS)
 	fieldsJSETag = generateETag(fieldsJS)
@@ -84,6 +85,23 @@ func init() {
 	chartJSETag = generateETag(chartJS)
 	hashJSETag = generateETag(hashJS)
 	faviconSVGETag = generateETag(faviconSVG)
+
+	// Добавляем cache-busting к URL скриптов в HTML
+	replacer := strings.NewReplacer(
+		"/static/js/utils.js", "/static/js/utils.js?v="+utilsJSETag,
+		"/static/js/servers.js", "/static/js/servers.js?v="+serversJSETag,
+		"/static/js/fields.js", "/static/js/fields.js?v="+fieldsJSETag,
+		"/static/js/filters.js", "/static/js/filters.js?v="+filtersJSETag,
+		"/static/js/clear-fields.js", "/static/js/clear-fields.js?v="+clearFieldsJSETag,
+		"/static/js/query.js", "/static/js/query.js?v="+queryJSETag,
+		"/static/js/json-highlight.js", "/static/js/json-highlight.js?v="+jsonHighlightJSETag,
+		"/static/js/import.js", "/static/js/import.js?v="+importJSETag,
+		"/static/js/chart.js", "/static/js/chart.js?v="+chartJSETag,
+		"/static/js/hash.js", "/static/js/hash.js?v="+hashJSETag,
+		"/static/js/main.js", "/static/js/main.js?v="+mainJSETag,
+	)
+	htmlPage = replacer.Replace(htmlPage)
+	htmlETag = generateETag(htmlPage)
 }
 
 func generateETag(content string) string {
